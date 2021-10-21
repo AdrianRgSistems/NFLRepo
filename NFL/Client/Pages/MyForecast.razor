@@ -1,0 +1,103 @@
+﻿@page "/myforecast"
+@inject HttpClient Http
+@inject IForecastService _forecastService
+
+@if(inicio)
+{
+    <h3>Mi Pronostico Semana #@_WeekNumber </h3>
+
+    @if(forecast != null)
+    {
+        <div>
+            <div>
+                <div class="col-xl-6 col-sm-6 col-md-6 mb-2 d-flex">
+                     <div class="col-xl-3 col-sm-6 col-md-6">
+                            <label class="p-2">Puntos Ultimo Juego</label>
+                     </div>
+                    <div class="col-xl-3 col-sm-6 col-md-6">
+                        <RadzenNumeric TValue="int" @bind-Value="@_desempate" Change="@updateScore"/>
+                    </div>
+                </div>
+            </div>
+            @foreach (var item in forecast.ForecastDetails)
+            {
+                var edit = (week.Status == 1) ? true : false;
+                <GameForecast detailDTO="@item" editable ="@edit" WinerChange="@actualizar"/>
+            }
+            <button @onclick="@Finalizar">Finalizar Pronostico</button>
+       </div>
+    }
+    else
+    {
+                <button @onclick="@Generate">Generar Nuevo Pronostico</button>
+    }
+
+}
+else
+{
+        <span>
+            Cargando...
+        </span>
+}
+
+@code {
+    private ForecastDTO forecast;
+    public List<GameDTO> Games;
+    public WeekDTO week;
+    private int _idWeek = 0;
+    private int _WeekNumber = 0;
+    private int _desempate = 0;
+    bool inicio = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await get_data();
+        inicio = true;
+    }
+
+    void updateScore()
+    {
+        forecast.Tiebreaker = _desempate;
+    }
+
+    private async Task get_data()
+    {
+        week = await Http.GetFromJsonAsync<WeekDTO>("/api/Weeks/last");
+        if (week is not null)
+        {
+            Games = week.Games.ToList();
+            _idWeek = week.Id;
+            _WeekNumber = week.WeekNumber.Value;
+        }
+        var res = await _forecastService.GetLastForecastAsync();
+        if (res != null)
+        {
+            forecast = res.Data;
+            _desempate = forecast.Tiebreaker.Value;
+        }
+        else forecast = null;
+    }
+
+    private async Task Generate()
+    {
+        var inscrito = await _forecastService.PostForecastASync(_idWeek);
+        if (inscrito.Succeeded)
+        {
+            await get_data();
+        }
+    }
+
+    private void actualizar(ForecastDetailDTO detail)
+    {
+        var det = forecast.ForecastDetails.FirstOrDefault(x => x.Id == detail.Id);
+        if (det != null) det = detail;
+    }
+
+    private async Task Finalizar()
+    {
+        var nules = forecast.ForecastDetails.Where(x => x.Win == null).Count();
+        if (nules > 0) Console.WriteLine("no se puede procesar");
+        var result = await _forecastService.EditForecast(forecast);
+    }
+
+}

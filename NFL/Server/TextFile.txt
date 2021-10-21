@@ -1,0 +1,1 @@
+﻿Scaffold-DbContext "Data Source=localhost;UserID=root;Pwd=javac;Database=nfl_pools;port=13306" Pomelo.EntityFrameworkCore.MySql -Context apiContext -OutputDir Models -Force

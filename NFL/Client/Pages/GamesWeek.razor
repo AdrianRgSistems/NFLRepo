@@ -1,0 +1,36 @@
+﻿@page "/games/{id:int}"
+@using NFL.Shared.ModelsDTO
+@inject HttpClient Http
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "User")]
+
+<h3>Juegos de la Semana @id</h3>
+
+@if(Games != null)
+{
+    foreach (var item in Games)
+    {
+        <div class="d-flex">
+        <TeamCard team="@item.VisitorNavigation" itsOver="true" score="@item.VisitorScore.Value"></TeamCard>
+        <span class="m-2">vs</span>
+        <TeamCard team="@item.LocalNavigation" itsLocal="true" itsOver="true" score="@item.LocalScore.Value"></TeamCard>
+        </div>    
+
+    }  
+}
+
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    public List<GameDTO> Games;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var res = await Http.GetFromJsonAsync<WeekDTO>("/api/Weeks/5");
+        if(res is not null)
+        {
+            Games = res.Games.ToList();
+        }
+    }
+}
