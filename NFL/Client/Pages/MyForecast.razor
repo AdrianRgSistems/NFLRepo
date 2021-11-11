@@ -1,44 +1,55 @@
 ﻿@page "/myforecast"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject HttpClient Http
 @inject IForecastService _forecastService
+<AuthorizeView>
+    <Authorized>
 
-@if(inicio)
-{
-    <h3>Mi Pronostico Semana #@_WeekNumber </h3>
+        @if (inicio)
+        {
+            <h3>Mi Pronostico Semana #@_WeekNumber </h3>
 
-    @if(forecast != null)
-    {
-        <div>
-            <div>
-                <div class="col-xl-6 col-sm-6 col-md-6 mb-2 d-flex">
-                     <div class="col-xl-3 col-sm-6 col-md-6">
-                            <label class="p-2">Puntos Ultimo Juego</label>
-                     </div>
-                    <div class="col-xl-3 col-sm-6 col-md-6">
-                        <RadzenNumeric TValue="int" @bind-Value="@_desempate" Change="@updateScore"/>
-                    </div>
-                </div>
-            </div>
-            @foreach (var item in forecast.ForecastDetails)
+            @if (forecast != null)
             {
-                var edit = (week.Status == 1) ? true : false;
-                <GameForecast detailDTO="@item" editable ="@edit" WinerChange="@actualizar"/>
+                <div>
+                    <div>
+                        <div class="col-xl-6 col-sm-6 col-md-6 mb-2 d-flex">
+                            <div class="col-xl-3 col-sm-6 col-md-6">
+                                <label class="p-2">Puntos Ultimo Juego</label>
+                            </div>
+                            <div class="col-xl-3 col-sm-6 col-md-6">
+                                <RadzenNumeric TValue="int" @bind-Value="@_desempate" Change="@updateScore" />
+                            </div>
+                        </div>
+                    </div>
+                    @foreach (var item in forecast.ForecastDetails)
+                    {
+                        var edit = (week.Status == 1) ? true : false;
+                        <GameForecast detailDTO="@item" editable="@edit" WinerChange="@actualizar" />
+                    }
+                    <button @onclick="@Finalizar">Finalizar Pronostico</button>
+                </div>
             }
-            <button @onclick="@Finalizar">Finalizar Pronostico</button>
-       </div>
-    }
-    else
-    {
+            else
+            {
                 <button @onclick="@Generate">Generar Nuevo Pronostico</button>
-    }
+            }
 
-}
-else
-{
+        }
+        else
+        {
+            <span>
+                Cargando...
+            </span>
+        }
+    </Authorized>
+    <NotAuthorized>
         <span>
-            Cargando...
+            inicie sesion para continuar
         </span>
-}
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private ForecastDTO forecast;
@@ -51,8 +62,9 @@ else
 
     protected async override Task OnInitializedAsync()
     {
-        await get_data();
-        inicio = true;
+
+       await get_data();
+      
     }
 
     void updateScore()
@@ -74,6 +86,7 @@ else
         {
             forecast = res.Data;
             _desempate = forecast.Tiebreaker.Value;
+              inicio = true;
         }
         else forecast = null;
     }

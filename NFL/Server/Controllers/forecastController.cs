@@ -29,7 +29,13 @@ namespace NFL.Server.Controllers
         public async Task<ActionResult> Get()
         {
             var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
-            var respo = await _context.Forecasts.Where(x => x.IdUser == user).ToListAsync();
+            var respo = await _context.Forecasts.Where(x => x.IdUser == user).
+                                     Include(x => x.ForecastDetails).
+                                     ThenInclude(x => x.GameNavigation).
+                                     ThenInclude(x => x.VisitorNavigation).
+                                     Include(x => x.ForecastDetails).
+                                     ThenInclude(x => x.GameNavigation).
+                                     ThenInclude(x => x.LocalNavigation).ToListAsync();
             var res = _mapper.Map<IEnumerable<ForecastDTO>>(respo);
             var response = await Result<IEnumerable<ForecastDTO>>.SuccessAsync(res);
             if (response != null) return Ok(response); else return NotFound();
