@@ -1,7 +1,50 @@
 ﻿@page "/"
+@inject HttpClient _HttpClient
+<AuthorizeView>
+    <NotAuthorized>
+        <h1>Bienvenido!</h1>
+        Inicia sesion o registrate para continuar.
+    </NotAuthorized>
+    <Authorized>
+        @if (weekinprogress > 0)
+        {
+            @if (weekinprogress == 1)
+            {
 
-<h1>Hello, world!</h1>
+            }
+            else if (weekinprogress == 2)
+            {
 
-Welcome to your new app.
+            }
+            else
+            {
+                <span>
+                    en progreso...
+                </span>
+            }
+        }
+        else
+        {
+            <span>Dashboard</span>
+        }
+    </Authorized>
+</AuthorizeView>
+@code {
+    public WeekDTO week { get; set; }
+    int weekinprogress = 0;
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    protected override async Task OnInitializedAsync()
+    {
+        await GetWeek();
+    }
+
+    private async Task GetWeek()
+    {
+        var resp = await _HttpClient.GetFromJsonAsync<WeekDTO>("/api/Weeks/current");
+        if (resp != null)
+        {
+            week = resp;
+            weekinprogress = week.Status;
+        }
+    }
+}

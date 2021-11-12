@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace NFL.Server.Controllers
 {
-    public class OidcConfigurationController : Controller
+    public class OidcConfigurationController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly ILogger<OidcConfigurationController> _logger;
 

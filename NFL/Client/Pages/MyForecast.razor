@@ -33,9 +33,13 @@
             }
             else
             {
-                <button @onclick="@Generate">Generar Nuevo Pronostico</button>
+                @if (week.Status == 1)
+                {
+                    <button @onclick="@Generate">Generar Nuevo Pronostico</button>
+                }else{
+                    <h5>El tiempo para ingresar a expirado</h5>
+                }
             }
-
         }
         else
         {
@@ -63,8 +67,8 @@
     protected async override Task OnInitializedAsync()
     {
 
-       await get_data();
-      
+        await get_data();
+        inicio = true;
     }
 
     void updateScore()
@@ -86,13 +90,13 @@
         {
             forecast = res.Data;
             _desempate = forecast.Tiebreaker.Value;
-              inicio = true;
+
         }
         else forecast = null;
     }
 
     private async Task Generate()
-    {
+    {            
         var inscrito = await _forecastService.PostForecastASync(_idWeek);
         if (inscrito.Succeeded)
         {
@@ -108,9 +112,12 @@
 
     private async Task Finalizar()
     {
-        var nules = forecast.ForecastDetails.Where(x => x.Win == null).Count();
-        if (nules > 0) Console.WriteLine("no se puede procesar");
-        var result = await _forecastService.EditForecast(forecast);
+        if (week.Status == 1)
+        {
+            var nules = forecast.ForecastDetails.Where(x => x.Win == null).Count();
+            if (nules > 0) Console.WriteLine("no se puede procesar");
+            var result = await _forecastService.EditForecast(forecast);
+        }
     }
 
 }

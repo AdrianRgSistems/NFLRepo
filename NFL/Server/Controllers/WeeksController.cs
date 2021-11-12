@@ -50,6 +50,26 @@ namespace NFL.Server.Controllers
             return result;
         }
 
+        [HttpGet("current")]
+        public async Task<ActionResult<WeekDTO>> GetCurrent()
+        {
+            var current = await _context.Weeks.Where(x => x.Status != 0).
+                                           Include(x => x.Games).
+                                           ThenInclude(x => x.LocalNavigation).
+                                           Include(z => z.Games).
+                                           ThenInclude(z => z.VisitorNavigation).ToListAsync();
+            var week = current.LastOrDefault();
+
+            //var week = await _context.Weeks.Where(x => x.Status != 0).
+            //                                Include(x => x.Games).
+            //                                ThenInclude(x => x.LocalNavigation).
+            //                                Include(z => z.Games).
+            //                                ThenInclude(z => z.VisitorNavigation).
+            //                                LastOrDefaultAsync();
+            var result = _mapper.Map<WeekDTO>(week);
+            return result;
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WeekDTO>>> GetAllAsync()
         {
@@ -60,7 +80,7 @@ namespace NFL.Server.Controllers
 
 
         [HttpPut]
-        public async Task<IResult> Put(WeekDTO week)
+        public async Task<Shared.Wrapper.IResult> Put(WeekDTO week)
         {
             var _week = _mapper.Map<Week>(week);
             _context.Update(_week);

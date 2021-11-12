@@ -26,7 +26,7 @@ namespace NFL.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Get()
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult> Get()
         {
             var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
             var respo = await _context.Forecasts.Where(x => x.IdUser == user).
@@ -60,7 +60,7 @@ namespace NFL.Server.Controllers
         }
 
         [HttpPost] 
-        public async Task<IResult> Post(ForecastDTO forecast)
+        public async Task<Shared.Wrapper.IResult> Post(ForecastDTO forecast)
         {
             var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
             forecast.IdUser = user;
@@ -79,7 +79,7 @@ namespace NFL.Server.Controllers
 
 
         [HttpPut]
-        public async Task<IResult> Put(ForecastDTO forecast)
+        public async Task<Shared.Wrapper.IResult> Put(ForecastDTO forecast)
         {
             try
             {
