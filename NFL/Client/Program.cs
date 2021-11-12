@@ -31,6 +31,7 @@ namespace NFL.Client
             // Supply HttpClient instances that include access tokens when making requests to the server project
             builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("NFL.ServerAPI"));
             builder.Services.AddScoped<IForecastService, ForecastService>();
+            builder.Services.AddScoped<IWeekService, WeekService>();
 
             builder.Services.AddApiAuthorization();
 
