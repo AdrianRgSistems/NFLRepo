@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject HttpClient _HttpClient
+@inject AuthenticationStateProvider auth
 <AuthorizeView>
     <NotAuthorized>
         <h1>Bienvenido!</h1>
@@ -10,16 +11,20 @@
         {
             @if (weekinprogress == 1)
             {
-
+                <span>
+                    Registro Abierto
+                </span>
             }
             else if (weekinprogress == 2)
             {
-
+                <span>
+                    en progreso...
+                </span>
             }
             else
             {
                 <span>
-                    en progreso...
+                    Semana Finalizada
                 </span>
             }
         }
@@ -35,16 +40,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await GetWeek();
+        var authstate = await auth.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if(user.Identity.IsAuthenticated)await GetWeek();
     }
 
     private async Task GetWeek()
-    {
-        var resp = await _HttpClient.GetFromJsonAsync<WeekDTO>("/api/Weeks/current");
-        if (resp != null)
-        {
-            week = resp;
-            weekinprogress = week.Status;
-        }
+    { 
+            var resp = await _HttpClient.GetFromJsonAsync<WeekDTO>("/api/Weeks/current");
+            if (resp != null)
+            {
+                week = resp;
+                weekinprogress = week.Status.Value;
+            }
     }
 }
