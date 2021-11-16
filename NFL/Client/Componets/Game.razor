@@ -1,0 +1,131 @@
+﻿@using Radzen
+@inject IGamesService gameService
+@if (game != null)
+{
+    <div class="col-xl-6 col-sm-6 col-md-6 d-flex">
+        <div class="t-box mb-2 p-1 team @visitor">
+            <div class="name2">
+                @{
+                    <span class="m-2">@game.VisitorNavigation.LastName </span>
+                }
+            </div>
+            <div class="img2">
+                <img width="30px" height="30px" src="@game.VisitorNavigation.ImageUrl" alt="@@detailDTO.GameNavigation.VisitorNavigation.LastName" />
+            </div>
+            <div class="score1">
+                <RadzenNumeric ShowUpDown="@(!isOver)" ReadOnly="@isOver" TValue="int" @bind-Value="@visitorScore"></RadzenNumeric>
+            </div>
+        </div>
+        <span class="m-2">vs</span>
+        <div class="t-box mb-2 p-1 team @local">
+            <div class="score1">
+                <RadzenNumeric ShowUpDown="@(!isOver)" ReadOnly="@isOver" TValue="int" @bind-Value="@homeScore" ></RadzenNumeric>
+            </div>
+            <div class="img2">
+                <img width="30px" height="30px" src="@game.LocalNavigation.ImageUrl" alt="@@detailDTO.GameNavigation.LocalNavigation.LastName" />
+            </div>
+            <div class="name2">
+                @{
+                    <span class="m-2">@game.LocalNavigation.LastName </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="d-flex">
+        @if (!isOver)
+        {
+
+            <div class="col-xl-6 col-sm-6 col-md-6">
+                <RadzenButton style="margin: 0 5px 1rem 0" Click=@(()=>OnClick(2)) Text="Guardar" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton style="margin: 0 5px 1rem 0" Click=@(()=>OnClick(3)) Text="Finalizar" ButtonStyle="ButtonStyle.Primary" />
+            </div>
+        }
+    </div>
+}
+@code {
+    [Parameter] public GameDTO game { get; set; }
+    [Parameter] public int homeScore { get; set; }
+    [Parameter] public int visitorScore { get; set; }
+    [Parameter] public bool isOver { get; set; } = false;
+    [Parameter] public bool editable { get; set; } = false;
+    string local = "";
+    string visitor = "";
+    protected override void OnInitialized()
+    {
+        setGame();
+    }
+
+    private void setGame()
+    {
+        homeScore = game.LocalScore.Value;
+        visitorScore = game.VisitorScore.Value;
+        isOver = (game.Status == 3) ? true : false;
+        if (game.Win == game.Local) local = "winer";
+        if (game.Win == game.Visitor) visitor = "winer";
+    }
+
+
+    private async Task OnClick(int status)
+    {
+        game.LocalScore = homeScore;
+        game.VisitorScore = visitorScore;
+        game.Status = status;
+        if (status == 3)
+        {
+            if (game.VisitorScore < game.LocalScore) game.Win = game.Local;
+            if (game.VisitorScore > game.LocalScore) game.Win = game.Visitor;
+        }
+        var result = await gameService.EditForecast(game);
+        setGame();
+    }
+}
+<style>
+    body {
+        font-size: 11px;
+    }
+
+    .winer {
+        background-color: #1DB65E;
+        color: white;
+    }
+
+    .t-box {
+        border: 1px solid black;
+        display: grid;
+        width: 40vh;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .score1 {
+        grid-column: 1/3;
+        grid-row: 2;
+        align-self: center;
+    }
+
+    .img1 {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
+    }
+
+    .name1 {
+        grid-column: 2/4;
+        grid-row: 1;
+        justify-self: end;
+        align-self: center;
+    }
+
+    .img2 {
+        grid-column: 3;
+        grid-row: 1/3;
+        justify-self: center;
+        align-self: center;
+    }
+
+    .name2 {
+        grid-column: 1/3;
+        grid-row: 1;
+        align-self: center;
+    }
+</style>

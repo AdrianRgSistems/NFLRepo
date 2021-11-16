@@ -46,6 +46,15 @@ namespace NFL.Server.Controllers
                                             Include(z => z.Games).
                                             ThenInclude(z => z.VisitorNavigation).
                                             FirstOrDefaultAsync();
+            if (week == null)
+            {
+                var weeks = await _context.Weeks.Where(x => x.Status == 3).
+                                            Include(x => x.Games).
+                                            ThenInclude(x => x.LocalNavigation).
+                                            Include(z => z.Games).
+                                            ThenInclude(z => z.VisitorNavigation).ToListAsync();
+                week = weeks.LastOrDefault();
+            }
             var result = _mapper.Map<WeekDTO>(week);
             return result;
         }

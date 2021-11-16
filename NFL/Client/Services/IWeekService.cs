@@ -1,4 +1,5 @@
 ﻿using NFL.Shared.ModelsDTO;
+using NFL.Shared.ModelsNfl;
 using NFL.Shared.Wrapper;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,5 +10,6 @@ namespace NFL.Client.Services
     {
         Task<IResult> EditWeek(WeekDTO week);
         Task<IEnumerable<WeekDTO>> GetAllAsync();
+        Task<Games> scoresService(int week);
     }
 }

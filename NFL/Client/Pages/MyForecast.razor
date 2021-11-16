@@ -1,14 +1,17 @@
 ﻿@page "/myforecast"
 @using Microsoft.AspNetCore.Authorization
+@using Radzen
 @attribute [Authorize]
 @inject HttpClient Http
 @inject IForecastService _forecastService
+@inject NavigationManager nav
+@inject NotificationService NotificationService
 <AuthorizeView>
     <Authorized>
 
         @if (inicio)
         {
-            <h3>Mi Pronostico Semana #@_WeekNumber </h3>
+            <h3>Mi Pronostico Semana #@_WeekNumber estado @week.Status</h3>
 
             @if (forecast != null)
             {
@@ -36,7 +39,9 @@
                 @if (week.Status == 1)
                 {
                     <button @onclick="@Generate">Generar Nuevo Pronostico</button>
-                }else{
+                }
+                else
+                {
                     <h5>El tiempo para ingresar a expirado</h5>
                 }
             }
@@ -90,13 +95,12 @@
         {
             forecast = res.Data;
             _desempate = forecast.Tiebreaker.Value;
-
         }
         else forecast = null;
     }
 
     private async Task Generate()
-    {            
+    {
         var inscrito = await _forecastService.PostForecastASync(_idWeek);
         if (inscrito.Succeeded)
         {
@@ -117,7 +121,19 @@
             var nules = forecast.ForecastDetails.Where(x => x.Win == null).Count();
             if (nules > 0) Console.WriteLine("no se puede procesar");
             var result = await _forecastService.EditForecast(forecast);
+            ShowNotification(new NotificationMessage
+                {
+                    Style = "position: absolute; left: -330px; top: 200px;",
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Proceso Finalizado",
+                    Detail = "Pronostico actualizado",
+                    Duration =1000
+                });
+            nav.NavigateTo("/");
         }
     }
-
+    void ShowNotification(NotificationMessage message)
+    {
+        NotificationService.Notify(message);
+    }
 }

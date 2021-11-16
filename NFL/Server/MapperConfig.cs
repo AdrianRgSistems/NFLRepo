@@ -26,6 +26,12 @@ namespace NFL.Server
             CreateMap<ForecastDetail, ForecastDetailDTO>();
             CreateMap<ForecastDetailDTO, ForecastDetail>();
 
+            CreateMap<Spool, SpoolDTO>();
+            CreateMap<SpoolDTO, Spool>();
+
+            CreateMap<SpoolWinner, SpoolWinnerDTO>();
+            CreateMap<SpoolWinnerDTO, SpoolWinner>();
+
         }
     }
 }

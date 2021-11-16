@@ -12,7 +12,7 @@ namespace NFL.Shared.ModelsDTO
         public int? VisitorScore { get; set; }
         public int? LocalScore { get; set; }
         public int? Status { get; set; }
-
+        public string Win { get; set; }
         public virtual TeamDTO LocalNavigation { get; set; }
         public virtual TeamDTO VisitorNavigation { get; set; }
         //public virtual WeekDTO Week { get; set; }

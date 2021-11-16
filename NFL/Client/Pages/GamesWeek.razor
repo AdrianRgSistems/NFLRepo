@@ -1,9 +1,9 @@
-﻿@page "/games/{id:int}"
+﻿@page "/games"
 @using NFL.Shared.ModelsDTO
 @inject HttpClient Http
 @inject IWeekService weekService
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = "User")]
+@attribute [Authorize(Roles = "User , Admin")]
 
 @if (Weeks != null)
 {
@@ -58,6 +58,7 @@ else
     {
         await GetWeecks();
         actualWeek = Weeks.FirstOrDefault(x => x.Status == 1 || x.Status == 2);
+        if (actualWeek == null) actualWeek = Weeks.LastOrDefault(x => x.Status == 3);
         await GetGames(actualWeek.Id);
     }
 

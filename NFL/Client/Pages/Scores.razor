@@ -1,0 +1,80 @@
+﻿@page "/scores/{week:int}"
+@using NFL.Shared.ModelsDTO
+@inject HttpClient Http
+@inject IWeekService weekService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@if (Weeks != null)
+{
+    <h3>Juegos Semana @actualWeek.WeekNumber</h3>
+
+    @if (Games != null)
+    {
+        foreach (var item in Games)
+        {
+            <RadzenCard Style="margin-bottom:15px; padding: .5rem .5rem">
+                <Game game=@item homeScore=0 isOver=false visitorScore=0 editable=true></Game> 
+            </RadzenCard>
+        }
+    }
+
+}
+else
+{
+    <h3>Loading...</h3>
+
+}
+
+
+@code {
+    [Parameter]
+    public int week { get; set; }
+    public List<GameDTO> Games;
+    public List<WeekDTO> Weeks;
+    public WeekDTO actualWeek;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await GetWeecks();
+        actualWeek = Weeks.FirstOrDefault(x => x.Status == 1 || x.Status == 2);
+        await GetGames(actualWeek.Id);
+    }
+
+    private async Task GetWeecks()
+    {
+        var res = await weekService.GetAllAsync();
+        if (res != null)
+        {
+            Weeks = res.ToList();
+        }
+    }
+
+    private async Task GetGames(int id)
+    {
+        var res = await Http.GetFromJsonAsync<WeekDTO>($"/api/Weeks/{id}");
+        if (res is not null)
+        {
+            Games = res.Games.OrderBy(x => x.Date).ToList();
+            actualWeek = res;
+        }
+    }
+
+    private async Task changes(ChangeEventArgs e)
+    {
+        var id = int.Parse(e.Value.ToString());
+        if(id != 0)await GetGames(id);
+    }
+
+}
+<style>
+
+    .d3-o-section-title {
+        border-bottom: none;
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        margin-top: 6px;
+        margin-left: 15px;
+    }
+</style>

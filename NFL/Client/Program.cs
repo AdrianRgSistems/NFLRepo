@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace NFL.Client
 {
     public class Program
@@ -32,9 +33,10 @@ namespace NFL.Client
             builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("NFL.ServerAPI"));
             builder.Services.AddScoped<IForecastService, ForecastService>();
             builder.Services.AddScoped<IWeekService, WeekService>();
+            builder.Services.AddScoped<IGamesService, GamesService>();
+            builder.Services.AddScoped<ISpoolServices, SpoolServices>();
 
             builder.Services.AddApiAuthorization();
-
             await builder.Build().RunAsync();
         }
     }

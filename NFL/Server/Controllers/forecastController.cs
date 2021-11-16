@@ -69,6 +69,12 @@ namespace NFL.Server.Controllers
                 var data = _mapper.Map<Forecast>(forecast);
                 await _context.Forecasts.AddAsync(data);
                 await _context.SaveChangesAsync();
+                var spools =_context.Spools.Where(x=>x.WeekId == forecast.IdWeek).ToList();
+                var spool = spools.LastOrDefault();
+                spool.Participants = _context.Forecasts.Where(x=> x.IdWeek == forecast.IdWeek).Count();
+                spool.Amount =spool.Participants * 50;
+                _context.Spools.Update(spool);
+                await _context.SaveChangesAsync();
                 return await Result.SuccessAsync();
             }
             catch (System.Exception)

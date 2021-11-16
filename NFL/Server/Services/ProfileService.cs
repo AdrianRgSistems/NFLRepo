@@ -1,7 +1,7 @@
-﻿using IdentityModel;
-using IdentityServer4.Extensions;
+﻿using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
+using IdentityModel;
 using Microsoft.AspNetCore.Identity;
 using NFL.Server.Models;
 using System;

@@ -1,0 +1,106 @@
+﻿@page "/Admin"
+@using NFL.Shared.ModelsDTO
+@inject HttpClient Http
+@inject IWeekService weekService
+@inject AuthenticationStateProvider auth
+@inject HttpClient _HttpClient
+@inject NavigationManager nav
+@inject ISpoolServices spools
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+<h3>Administracion</h3>
+
+
+<AuthorizeView>
+    <NotAuthorized>
+        <h1>Bienvenido!</h1>
+        Inicia sesion o registrate para continuar.
+    </NotAuthorized>
+    <Authorized>
+        @if (weekinprogress > 0)
+        {
+            @if (weekinprogress == 1)
+            {
+                <RadzenCard>
+                <span>
+                    Registro Abierto
+                </span>
+                    <RadzenButton Text="Finalizar Registro" Click="@StopReg" ButtonStyle="Radzen.ButtonStyle.Secondary"></RadzenButton>
+                </RadzenCard>
+            }
+            else if (weekinprogress == 2)
+            {
+                <RadzenCard>
+                <span>
+                    En Progreso
+                </span>
+                    <RadzenButton Text="Actualizar Marcadores" Click="@GotoScores" ButtonStyle="Radzen.ButtonStyle.Secondary"></RadzenButton>
+                </RadzenCard>
+            }
+            else
+            {
+                <RadzenCard>
+                    <RadzenButton Text="Abrir Semana Siguiente" Click="StartWeek" ButtonStyle="Radzen.ButtonStyle.Secondary"></RadzenButton>
+                </RadzenCard>
+            }
+        }
+        else
+        {
+            <span>Dashboard</span>
+        }
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    public Games games { get; set; }
+    public WeekDTO week { get; set; }
+    int weekinprogress = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authstate = await auth.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user.Identity.IsAuthenticated) await GetWeek();
+    }
+
+    private async Task GetWeek()
+    {
+        var resp = await _HttpClient.GetFromJsonAsync<WeekDTO>("/api/Weeks/current");
+        if (resp != null)
+        {
+            week = resp;
+            weekinprogress = week.Status.Value;
+        }
+    }
+
+    private void GotoScores()
+    {
+        nav.NavigateTo("/scores"); 
+
+    }
+
+    private async Task StartWeek()
+    {
+        var next = week.Id + 1;
+        var nextWeek =  await _HttpClient.GetFromJsonAsync<WeekDTO>($"/api/Weeks/{next}");
+        if(nextWeek != null)
+        {
+            nextWeek.Status = 1;
+            await weekService.EditWeek(nextWeek);
+            var spool = new SpoolDTO { WeekId = next, Amount = 0m, Participants = 0, Winners = 0 };
+            await spools.AddAsync(spool);
+            await GetWeek();
+            StateHasChanged();
+        }
+    }
+
+    private async Task StopReg()
+    {
+        week.Status = 2;
+        await weekService.EditWeek(week);
+        await GetWeek();
+        StateHasChanged();
+    }
+}

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
-
 namespace NFL.Server.Models
 {
     public partial class Forecast
@@ -10,6 +8,7 @@ namespace NFL.Server.Models
         public Forecast()
         {
             ForecastDetails = new HashSet<ForecastDetail>();
+            SpoolWinners = new HashSet<SpoolWinner>();
         }
 
         public int Idforecast { get; set; }
@@ -21,5 +20,6 @@ namespace NFL.Server.Models
         public virtual AspNetUser IdUserNavigation { get; set; }
         public virtual Week IdWeekNavigation { get; set; }
         public virtual ICollection<ForecastDetail> ForecastDetails { get; set; }
+        public virtual ICollection<SpoolWinner> SpoolWinners { get; set; }
     }
 }

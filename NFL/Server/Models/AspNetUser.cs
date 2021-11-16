@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
-
 namespace NFL.Server.Models
 {
     public partial class AspNetUser
@@ -11,9 +9,10 @@ namespace NFL.Server.Models
         {
             AspNetUserClaims = new HashSet<AspNetUserClaim>();
             AspNetUserLogins = new HashSet<AspNetUserLogin>();
-            AspNetUserRoles = new HashSet<AspNetUserRole>();
             AspNetUserTokens = new HashSet<AspNetUserToken>();
             Forecasts = new HashSet<Forecast>();
+            SpoolWinners = new HashSet<SpoolWinner>();
+            Roles = new HashSet<AspNetRole>();
         }
 
         public string Id { get; set; }
@@ -35,8 +34,10 @@ namespace NFL.Server.Models
 
         public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; }
         public virtual ICollection<AspNetUserLogin> AspNetUserLogins { get; set; }
-        public virtual ICollection<AspNetUserRole> AspNetUserRoles { get; set; }
         public virtual ICollection<AspNetUserToken> AspNetUserTokens { get; set; }
         public virtual ICollection<Forecast> Forecasts { get; set; }
+        public virtual ICollection<SpoolWinner> SpoolWinners { get; set; }
+
+        public virtual ICollection<AspNetRole> Roles { get; set; }
     }
 }

@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-
-#nullable disable
 
 namespace NFL.Server.Models
 {
@@ -22,7 +21,6 @@ namespace NFL.Server.Models
         public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
         public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
         public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
-        public virtual DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
         public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
         public virtual DbSet<Conference> Conferences { get; set; }
         public virtual DbSet<DeviceCode> DeviceCodes { get; set; }
@@ -33,6 +31,8 @@ namespace NFL.Server.Models
         public virtual DbSet<Game> Games { get; set; }
         public virtual DbSet<PersistedGrant> PersistedGrants { get; set; }
         public virtual DbSet<Schedule> Schedules { get; set; }
+        public virtual DbSet<Spool> Spools { get; set; }
+        public virtual DbSet<SpoolWinner> SpoolWinners { get; set; }
         public virtual DbSet<Team> Teams { get; set; }
         public virtual DbSet<Week> Weeks { get; set; }
 
@@ -41,14 +41,14 @@ namespace NFL.Server.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseMySql("data source=localhost;userid=root;pwd=javac;database=nfl_pools;port=13306", Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.26-mysql"));
+                optionsBuilder.UseMySql("data source=localhost;userid=root;pwd=javac;database=nfl_pools;port=2306", Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.27-mysql"));
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasCharSet("utf8mb4")
-                .UseCollation("utf8mb4_0900_ai_ci");
+            modelBuilder.UseCollation("utf8mb4_0900_ai_ci")
+                .HasCharSet("utf8mb4");
 
             modelBuilder.Entity<AspNetRole>(entity =>
             {
@@ -89,6 +89,21 @@ namespace NFL.Server.Models
                 entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
 
                 entity.Property(e => e.UserName).HasMaxLength(256);
+
+                entity.HasMany(d => d.Roles)
+                    .WithMany(p => p.Users)
+                    .UsingEntity<Dictionary<string, object>>(
+                        "AspNetUserRole",
+                        l => l.HasOne<AspNetRole>().WithMany().HasForeignKey("RoleId"),
+                        r => r.HasOne<AspNetUser>().WithMany().HasForeignKey("UserId"),
+                        j =>
+                        {
+                            j.HasKey("UserId", "RoleId").HasName("PRIMARY").HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+                            j.ToTable("AspNetUserRoles");
+
+                            j.HasIndex(new[] { "RoleId" }, "IX_AspNetUserRoles_RoleId");
+                        });
             });
 
             modelBuilder.Entity<AspNetUserClaim>(entity =>
@@ -118,23 +133,6 @@ namespace NFL.Server.Models
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.AspNetUserLogins)
-                    .HasForeignKey(d => d.UserId);
-            });
-
-            modelBuilder.Entity<AspNetUserRole>(entity =>
-            {
-                entity.HasKey(e => new { e.UserId, e.RoleId })
-                    .HasName("PRIMARY")
-                    .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-
-                entity.HasIndex(e => e.RoleId, "IX_AspNetUserRoles_RoleId");
-
-                entity.HasOne(d => d.Role)
-                    .WithMany(p => p.AspNetUserRoles)
-                    .HasForeignKey(d => d.RoleId);
-
-                entity.HasOne(d => d.User)
-                    .WithMany(p => p.AspNetUserRoles)
                     .HasForeignKey(d => d.UserId);
             });
 
@@ -350,9 +348,7 @@ namespace NFL.Server.Models
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Date)
-                    .HasColumnType("date")
-                    .HasColumnName("date");
+                entity.Property(e => e.Date).HasColumnName("date");
 
                 entity.Property(e => e.Local)
                     .HasMaxLength(4)
@@ -448,6 +444,85 @@ namespace NFL.Server.Models
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.Year).HasColumnName("year");
+            });
+
+            modelBuilder.Entity<Spool>(entity =>
+            {
+                entity.HasKey(e => e.Idspool)
+                    .HasName("PRIMARY");
+
+                entity.ToTable("spool");
+
+                entity.HasIndex(e => e.Idspool, "idspool_UNIQUE")
+                    .IsUnique();
+
+                entity.HasIndex(e => e.WeekId, "weekfore_idx");
+
+                entity.Property(e => e.Idspool).HasColumnName("idspool");
+
+                entity.Property(e => e.Amount)
+                    .HasPrecision(10, 2)
+                    .HasColumnName("amount");
+
+                entity.Property(e => e.Participants).HasColumnName("participants");
+
+                entity.Property(e => e.WeekId).HasColumnName("week_id");
+
+                entity.Property(e => e.Winners).HasColumnName("winners");
+
+                entity.HasOne(d => d.Week)
+                    .WithMany(p => p.Spools)
+                    .HasForeignKey(d => d.WeekId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("weekfore");
+            });
+
+            modelBuilder.Entity<SpoolWinner>(entity =>
+            {
+                entity.HasKey(e => e.IdspoolWinners)
+                    .HasName("PRIMARY");
+
+                entity.ToTable("spool_winners");
+
+                entity.HasIndex(e => e.IdForecast, "fkforecast_idx");
+
+                entity.HasIndex(e => e.SpoolId, "fkspool_idx");
+
+                entity.HasIndex(e => e.IdUser, "fkuser_idx");
+
+                entity.HasIndex(e => e.IdspoolWinners, "idspool_winners_UNIQUE")
+                    .IsUnique();
+
+                entity.Property(e => e.IdspoolWinners).HasColumnName("idspool_winners");
+
+                entity.Property(e => e.Amount)
+                    .HasPrecision(10, 2)
+                    .HasColumnName("amount");
+
+                entity.Property(e => e.IdForecast).HasColumnName("id_forecast");
+
+                entity.Property(e => e.IdUser)
+                    .IsRequired()
+                    .HasColumnName("id_User");
+
+                entity.Property(e => e.SpoolId).HasColumnName("spool_id");
+
+                entity.HasOne(d => d.IdForecastNavigation)
+                    .WithMany(p => p.SpoolWinners)
+                    .HasForeignKey(d => d.IdForecast)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("fkforecast");
+
+                entity.HasOne(d => d.IdUserNavigation)
+                    .WithMany(p => p.SpoolWinners)
+                    .HasForeignKey(d => d.IdUser)
+                    .HasConstraintName("fkuser");
+
+                entity.HasOne(d => d.Spool)
+                    .WithMany(p => p.SpoolWinners)
+                    .HasForeignKey(d => d.SpoolId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("fkspool");
             });
 
             modelBuilder.Entity<Team>(entity =>
