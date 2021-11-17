@@ -9,6 +9,7 @@ namespace NFL.Client.Services
     {
         Task<IResult> EditForecast(ForecastDTO forecast);
         Task<IResult<List<ForecastDTO>>> GetForecastAsync();
+        Task<IResult<List<ForecastDTO>>> GetAllForecastAsync(int week);
         Task<IResult<ForecastDTO>> GetLastForecastAsync();
         Task<IResult> PostForecastASync(int idWeek);
     }

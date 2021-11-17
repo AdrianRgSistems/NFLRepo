@@ -10,6 +10,6 @@
 
         public virtual ForecastDTO IdForecastNavigation { get; set; }
         public virtual AspNetUserDTO IdUserNavigation { get; set; }
-        public virtual SpoolDTO Spool { get; set; }
+        //public virtual SpoolDTO Spool { get; set; }
     }
 }

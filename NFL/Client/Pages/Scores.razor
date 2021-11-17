@@ -1,4 +1,4 @@
-﻿@page "/scores/{week:int}"
+﻿@page "/scores"
 @using NFL.Shared.ModelsDTO
 @inject HttpClient Http
 @inject IWeekService weekService
@@ -28,8 +28,6 @@ else
 
 
 @code {
-    [Parameter]
-    public int week { get; set; }
     public List<GameDTO> Games;
     public List<WeekDTO> Weeks;
     public WeekDTO actualWeek;

@@ -11,18 +11,22 @@
 
         @if (inicio)
         {
-            <h3>Mi Pronostico Semana #@_WeekNumber estado @week.Status</h3>
+            <h3>Mi Pronostico Semana #@_WeekNumber</h3>
 
             @if (forecast != null)
             {
-                <div>
+                   <div>
                     <div>
                         <div class="col-xl-6 col-sm-6 col-md-6 mb-2 d-flex">
                             <div class="col-xl-3 col-sm-6 col-md-6">
-                                <label class="p-2">Puntos Ultimo Juego</label>
+                                <label class="p-2 mb-2">Puntos Ultimo Juego</label>
                             </div>
+                            
                             <div class="col-xl-3 col-sm-6 col-md-6">
-                                <RadzenNumeric TValue="int" @bind-Value="@_desempate" Change="@updateScore" />
+                                @{
+                                    var read = (week.Status == 1) ? false : true;
+                                    <RadzenNumeric TValue="int" @bind-Value="@_desempate" ReadOnly="@read" Change="@updateScore" />
+                                }
                             </div>
                         </div>
                     </div>
@@ -31,14 +35,19 @@
                         var edit = (week.Status == 1) ? true : false;
                         <GameForecast detailDTO="@item" editable="@edit" WinerChange="@actualizar" />
                     }
-                    <button @onclick="@Finalizar">Finalizar Pronostico</button>
+                    @if (week.Status == 1)
+                    {
+                        <div class="d-flex justify-content-center align-content-center">
+                            <RadzenButton Click="@Finalizar" Text="Guardar Pronostico" ButtonStyle="Radzen.ButtonStyle.Secondary"></RadzenButton>
+                        </div>
+                    }
                 </div>
             }
             else
             {
                 @if (week.Status == 1)
                 {
-                    <button @onclick="@Generate">Generar Nuevo Pronostico</button>
+                    <button @onclick="@Generate">Agregar Pronostico</button>
                 }
                 else
                 {
@@ -127,7 +136,7 @@
                     Severity = NotificationSeverity.Success,
                     Summary = "Proceso Finalizado",
                     Detail = "Pronostico actualizado",
-                    Duration =1000
+                    Duration = 1000
                 });
             nav.NavigateTo("/");
         }

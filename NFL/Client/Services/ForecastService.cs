@@ -31,6 +31,20 @@ namespace NFL.Client.Services
             }
         }
 
+        public async Task<IResult<List<ForecastDTO>>> GetAllForecastAsync(int week)
+        {
+            var response = await _HttpClient.GetAsync($"api/forecast/all/{week}");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.ToResult<List<ForecastDTO>>();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+
         public async Task<IResult<ForecastDTO>> GetLastForecastAsync()
         {
             var response = await _HttpClient.GetAsync("api/forecast/last");

@@ -3,6 +3,7 @@
 @inject HttpClient _HttpClient
 @inject AuthenticationStateProvider auth
 @inject IWeekService weekService
+@inject IForecastService forecastService
 
 <AuthorizeView>
     <NotAuthorized>
@@ -15,56 +16,84 @@
             @if (weekinprogress == 1)
             {
                 <h5>
-                    Registro Abierto Seman #@week.WeekNumber
+                    Registro Abierto Semana #@week.WeekNumber
                 </h5>
-                    <hr/>
-                    @if (spools != null)
-                    {
-                        <h6>Participantes registrados @spools.Participants</h6>
-                        <h6>Monto acumulado: $@spools.Amount</h6>
-                        <hr />
-                        <RadzenCard>
-                            <h4>Juegos de la semana</h4>
-                            @{
-                                var dateLast = new DateTime();
-                                @foreach (var item in week.Games.OrderBy(x => x.Date))
+                <hr />
+                @if (spools != null)
+                {
+                    <h6>Participantes registrados @spools.Participants</h6>
+                    <h6>Monto acumulado: $@spools.Amount</h6>
+                    <hr />
+                    <RadzenCard>
+                        <h4>Juegos de la semana</h4>
+                        @{
+                            var dateLast = new DateTime();
+                            @foreach (var item in week.Games.OrderBy(x => x.Date))
+                            {
+                                var date = item.Date;
+                                if (dateLast != date)
                                 {
-                                    var date = item.Date;
-                                    if (dateLast != date)
-                                    {
-                                        <hr />
-                                        <h6 class="d3-o-section-title">@item.Date.Value.ToLongDateString()</h6>
-                                        <hr />
-                                    }
-                                    <div class="d-flex">
-                                        <TeamCard team="@item.VisitorNavigation" itsOver="true" score="@item.VisitorScore.Value"></TeamCard>
-                                        <span class="m-2">vs</span>
-                                        <TeamCard team="@item.LocalNavigation" itsLocal="true" itsOver="true" score="@item.LocalScore.Value"></TeamCard>
-                                    </div>
-                                    dateLast = date.Value;
-
+                                    <hr />
+                                    <h6 class="d3-o-section-title">@item.Date.Value.ToLongDateString()</h6>
+                                    <hr />
                                 }
-                            }
-                        </RadzenCard>
+                                <div class="d-flex">
+                                    <TeamCard team="@item.VisitorNavigation" itsOver="true" score="@item.VisitorScore.Value"></TeamCard>
+                                    <span class="m-2">vs</span>
+                                    <TeamCard team="@item.LocalNavigation" itsLocal="true" itsOver="true" score="@item.LocalScore.Value"></TeamCard>
+                                </div>
+                                dateLast = date.Value;
 
-                    }
+                            }
+                        }
+                    </RadzenCard>
+
+                }
             }
             else if (weekinprogress == 2)
             {
-                <span>
-                    en progreso...
-                </span>
+                <h5>
+                    Informacion Semana #@week.WeekNumber
+                </h5>
+                <hr />
+                @if (forecasts != null)
+                {
+                    <h6>Participantes registrados @spools.Participants</h6>
+                    <h6>Monto acumulado: $@spools.Amount</h6>
+                    <hr />
+                    <RadzenCard>
+                        <h4>Competidores</h4>
+                        <hr />
+                        @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
+                        {
+                            <h3>@item.IdUserNavigation.Fullname  Aciertos: @item.Hits</h3>
+                        }
+
+                    </RadzenCard>
+
+                }
             }
             else
             {
-                <span>
-                    Semana Finalizada, espera la proxima semana
-                </span>
+                if (spools != null)
+                {
+                    <h5>Semana Finalizada</h5>
+                    <h6>Resultados</h6>
+                    <hr />
+                    <h6>Participantes registrados @spools.Participants</h6>
+                    <h6>Monto acumulado: $@spools.Amount</h6>
+                    <hr />
+                    @foreach (var item in spools.SpoolWinners)
+                    {
+                        <h7>@item.IdUserNavigation.Fullname - Aciertos: @item.IdForecastNavigation.Hits - Premio: $@item.Amount</h7>
+                    }
+
+        }
             }
         }
         else
         {
-            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px;"/>
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px;" />
         }
     </Authorized>
 </AuthorizeView>
@@ -74,6 +103,7 @@
     public Games games { get; set; }
     public WeekDTO week { get; set; }
     public SpoolDTO spools { get; set; }
+    public List<ForecastDTO> forecasts { get; set; }
 
     int weekinprogress = 0;
 
@@ -93,6 +123,7 @@
             week = resp;
             weekinprogress = week.Status.Value;
             await GetSpools();
+            await GetForecast();
         }
     }
 
@@ -100,6 +131,12 @@
     {
         var resp = await _HttpClient.GetFromJsonAsync<SpoolDTO>($"api/spool/{week.WeekNumber}");
         spools = resp;
+    }
+
+    private async Task GetForecast()
+    {
+        var fores = await forecastService.GetAllForecastAsync(week.Id);
+        forecasts = fores.Data.ToList();
     }
 
 }

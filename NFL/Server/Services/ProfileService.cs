@@ -35,6 +35,7 @@ namespace NFL.Server.Services
             ApplicationUser user = await _userMgr.FindByIdAsync(sub);
             ClaimsPrincipal userClaims = await _userClaimsPrincipalFactory.CreateAsync(user);
 
+            
             List<Claim> claims = userClaims.Claims.ToList();
             claims = claims.Where(claim => context.RequestedClaimTypes.Contains(claim.Type)).ToList();
 
@@ -42,9 +43,10 @@ namespace NFL.Server.Services
             {
                 claims.Add(new Claim("FullName", user.fullname));
                 IList<string> roles = await _userMgr.GetRolesAsync(user);
+                claims.Add(new Claim("Role", roles.First()));
                     foreach (var roleName in roles)
                     {
-                        claims.Add(new Claim(JwtClaimTypes.Role, roleName));
+                        claims.Add(new Claim(ClaimTypes.Role, roleName));
                         if (_roleMgr.SupportsRoleClaims)
                         {
                             IdentityRole role = await _roleMgr.FindByNameAsync(roleName);

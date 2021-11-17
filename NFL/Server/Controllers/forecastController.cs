@@ -41,6 +41,26 @@ namespace NFL.Server.Controllers
             if (response != null) return Ok(response); else return NotFound();
         }
 
+
+        [HttpGet("all/{week}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult> GetAllAsync(int week)
+        {
+            var respo = await _context.Forecasts.Where(x => x.IdWeek == week).
+                                     Include(x => x.ForecastDetails).
+                                     ThenInclude(x => x.GameNavigation).
+                                     ThenInclude(x => x.VisitorNavigation).
+                                     Include(x => x.ForecastDetails).
+                                     ThenInclude(x => x.GameNavigation).
+                                     ThenInclude(x => x.LocalNavigation)
+                                     .Include(c=>c.IdUserNavigation)
+                                     .ToListAsync();
+            var res = _mapper.Map<IEnumerable<ForecastDTO>>(respo);
+            var response = await Result<IEnumerable<ForecastDTO>>.SuccessAsync(res);
+            if (response != null) return Ok(response); else return NotFound();
+        }
+
+
+
         [HttpGet("last")]
         public async Task<ActionResult<ForecastDTO>> GetLast()
         {

@@ -8,6 +8,7 @@ using NFL.Shared.Wrapper;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -27,18 +28,20 @@ namespace NFL.Server.Controllers
             _mapper = mapper;
         }
 
+        [Authorize(Roles = "Admin")]
         // PUT api/<GamesController>/5
         [HttpPut]
         public async Task<Shared.Wrapper.IResult> Put(GameDTO game)
         {
+
             var week = game.WeekId.Value;
             try
             {
                 var data = _mapper.Map<Game>(game);
-                await checkWeek(week);
                 _context.Entry(data).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                 //_context.Games.Update(data);
                 await _context.SaveChangesAsync();
+                await checkWeek(week);
                 return await Result.SuccessAsync();
             }
             catch (System.Exception)
@@ -49,25 +52,26 @@ namespace NFL.Server.Controllers
 
         private async Task checkWeek(int weekId)
         {
-            var week = await _context.Weeks.FindAsync(weekId);
-            await setWinner(week);
-            var rest = week.Games.Count(x=> x.Status != 3);
-            if(rest == 0)
+            var games = await _context.Games.Where(x=>x.WeekId == weekId).ToListAsync();
+            var week = await _context.Weeks.FirstOrDefaultAsync(x=>x.Id==weekId);
+            var rest = games.Count(x => x.Status != 3);
+            if (rest == 0)
             {
-                var lastGame = week.Games.LastOrDefault();
+                var lastGame = games.LastOrDefault();
                 week.Status = 3;
                 week.LastScore = lastGame.VisitorScore + lastGame.LocalScore;
                 _context.Weeks.Update(week);
                 await _context.SaveChangesAsync();
-            }   
+                await setWinner(week);
+            }
         }
 
         private async Task setWinner(Week week)
         {
             var winner = new List<Forecast>();
-            var forecasts = await _context.Forecasts.Where(x => x.IdWeek == week.Id).Include(x=> x.IdUserNavigation).OrderByDescending(x=> x.Hits).ToListAsync();
-            var top = forecasts.Max(x=>x.Hits).Value;
-            var winners = forecasts.Where(x=> x.Hits== top).ToList();
+            var forecasts = await _context.Forecasts.Where(x => x.IdWeek == week.Id).Include(x => x.IdUserNavigation).OrderByDescending(x => x.Hits).ToListAsync();
+            var top = forecasts.Max(x => x.Hits).Value;
+            var winners = forecasts.Where(x => x.Hits == top).ToList();
             if (winners.Count > 1)
             {
                 var dif = 10000;
@@ -77,7 +81,7 @@ namespace NFL.Server.Controllers
                     var difreal = Math.Abs(d);
                     if (difreal <= dif)
                     {
-                        if(difreal == dif)
+                        if (difreal == dif)
                         {
                             winner.Add(item);
                         }
@@ -94,6 +98,21 @@ namespace NFL.Server.Controllers
             {
                 winner = winners;
             }
+            await SaveWinners(winner, week.Id);
+        }
+
+        private async Task SaveWinners(List<Forecast> winners, int weekid)
+        {
+            var spool = await _context.Spools.FirstOrDefaultAsync(x => x.WeekId == weekid);
+            spool.Winners = winners.Count();
+            var ganado = spool.Amount / winners.Count();
+            foreach (var item in winners)
+            {
+                var winner = new SpoolWinner { Amount = ganado, IdForecast = item.Idforecast, IdUser = item.IdUser };
+                spool.SpoolWinners.Add(winner);
+            }
+            _context.Spools.Update(spool);
+            await _context.SaveChangesAsync();
         }
 
 

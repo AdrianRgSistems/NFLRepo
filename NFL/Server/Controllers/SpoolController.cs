@@ -36,7 +36,12 @@ namespace NFL.Server.Controllers
         [HttpGet("{id}")]
         public async Task<SpoolDTO> GetByWeek(int id)
         {
-            var res = await _context.Spools.Where(x => x.WeekId == id).FirstOrDefaultAsync();
+            var res = await _context.Spools.Where(x => x.WeekId == id)
+                                            .Include(x=> x.SpoolWinners)
+                                            .ThenInclude(x=>x.IdUserNavigation)
+                                            .Include(x=>x.SpoolWinners)
+                                            .ThenInclude(x=> x.IdForecastNavigation)
+                                            .FirstOrDefaultAsync();
             var responce = _mapper.Map<SpoolDTO>(res);
             return responce;
         }
