@@ -63,7 +63,7 @@
                     <h6>Participantes registrados @spools.Participants</h6>
                     <h6>Monto acumulado: $@spools.Amount</h6>
                     <hr />
-                    <RadzenCard>
+                    <RadzenCard style="background-color: #787A7B;">
                         <h4>Competidores</h4>
                         <hr />
                         @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
@@ -80,16 +80,15 @@
                 if (spools != null)
                 {
                     <h5>Semana Finalizada</h5>
-
-                    <h6>Resultados</h6>
                     <hr />
+                    <h6>Resultados</h6>
                     <h6>Participantes registrados @spools.Participants</h6>
                     <h6>Monto acumulado: $@spools.Amount</h6>
                     <hr />
                     @foreach (var item in spools.SpoolWinners)
                     {
-                        <RadzenCard style="background-color: #587C92;">
-                            <h7>@item.IdUserNavigation.Fullname - Aciertos: @item.IdForecastNavigation.Hits - Premio: $@item.Amount</h7>
+                        <RadzenCard style="background-color: #787A7B;">
+                            <h7 style="color: white">@item.IdUserNavigation.Fullname.ToUpper() - Aciertos: @item.IdForecastNavigation.Hits - Premio: $@item.Amount</h7>
                         </RadzenCard>
                     }
 

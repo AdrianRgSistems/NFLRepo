@@ -52,7 +52,7 @@ namespace NFL.Server.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [MinLength(15)]
+            [MinLength(5)]
             [Display(Name = "Name")]
             public string FullName { get; set; }
 
