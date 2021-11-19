@@ -52,8 +52,14 @@ namespace NFL.Server.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [MinLength(5)]
-            [Display(Name = "Name")]
+            [MinLength(3)]
+            [Display(Name = "User")]
+            public string UserName { get; set; }
+
+
+            [Required]
+            [MinLength(3)]
+            [Display(Name = "Full Name")]
             public string FullName { get; set; }
 
             [Required]
@@ -80,13 +86,13 @@ namespace NFL.Server.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = Input.Email, Email = Input.Email, fullname= Input.FullName };
+                var user = new ApplicationUser { UserName = Input.UserName, Email = Input.Email, fullname = Input.FullName };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
                     await _userManager.AddToRoleAsync(user, "User");
-                    
+
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
@@ -117,5 +123,6 @@ namespace NFL.Server.Areas.Identity.Pages.Account
             // If we got this far, something failed, redisplay form
             return Page();
         }
+
     }
 }
