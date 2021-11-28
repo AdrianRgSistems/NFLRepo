@@ -1,0 +1,95 @@
+﻿@page "/tabla"
+@inject HttpClient _HttpClient
+@inject AuthenticationStateProvider auth
+@inject IWeekService weekService
+@inject IForecastService forecastService
+
+<h3>Tabla</h3>
+
+@if (week != null)
+{
+    <div class="table-responsive">
+
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th style="font-size: 10px">
+                        <div>
+                            visita
+                        </div>
+                        <div>
+                            local
+                        </div>
+                    </th>
+                    @foreach (var game in week.Games.OrderBy(x => x.Date))
+                    {
+                        <th style="font-size: 10px">
+                            <div>
+                                @game.Visitor
+                            </div>
+                            <div>
+                                @game.Local
+                            </div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fore in forecasts)
+                {
+                    <tr>
+                        <td class="styky" style="font-size: 10px">@fore.IdUserNavigation.UserName</td>
+                        @foreach (var game in week.Games.OrderBy(x => x.Date))
+                        {
+                            string color = "";
+                            var detai = fore.ForecastDetails.FirstOrDefault(x => x.Game == game.Id);
+                            if (detai.IsCorrect == 1) color = "#35BF5F";
+                            <td style="background: @color; font-size: 10px">@detai.Win</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+
+@code {
+    public Games games { get; set; }
+    public WeekDTO week { get; set; }
+    public List<ForecastDTO> forecasts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authstate = await auth.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user.Identity.IsAuthenticated) await GetWeek();
+    }
+
+    private async Task GetWeek()
+    {
+        var resp = await _HttpClient.GetFromJsonAsync<WeekDTO>("/api/Weeks/current");
+        if (resp != null)
+        {
+            week = resp;
+            await GetForecast();
+        }
+    }
+
+    private async Task GetForecast()
+    {
+        var fores = await forecastService.GetAllForecastAsync(week.Id);
+        forecasts = fores.Data.ToList();
+    }
+
+
+}
+
+<style>
+    .styky {
+        position: sticky;
+        z-index: 1;
+    }
+</style>

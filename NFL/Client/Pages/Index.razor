@@ -1,9 +1,9 @@
 ﻿@page "/"
-@using Radzen
 @inject HttpClient _HttpClient
 @inject AuthenticationStateProvider auth
 @inject IWeekService weekService
 @inject IForecastService forecastService
+@using Radzen
 
 <AuthorizeView>
     <NotAuthorized>
@@ -22,8 +22,8 @@
                 @if (spools != null)
                 {
                     <div>
-                    <h6>Participantes registrados @spools.Participants</h6>
-                    <h6>Monto acumulado: $@spools.Amount</h6>
+                        <h6>Participantes registrados @spools.Participants</h6>
+                        <h6>Monto acumulado: $@spools.Amount</h6>
                     </div>
                     <hr />
                     <RadzenCard>
@@ -54,24 +54,67 @@
             }
             else if (weekinprogress == 2)
             {
-                <h5>
-                    Informacion Semana #@week.WeekNumber
-                </h5>
-                <hr />
                 @if (forecasts != null)
                 {
-                    <h6>Participantes registrados @spools.Participants</h6>
-                    <h6>Monto acumulado: $@spools.Amount</h6>
                     <hr />
-                    <RadzenCard style="background-color: #787A7B;">
-                        <h4>Competidores</h4>
-                        <hr />
-                        @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
-                        {
-                            <h3>@item.IdUserNavigation.Fullname  Aciertos: @item.Hits</h3>
-                        }
+                    <h4>Detalles de la Semana</h4>
+                    <hr />
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                        <RadzenCard class="radz">
+                            <h4 style="text-align: center">
+                                Semana:
+                            </h4>
+                            <h5 style="text-align: center">
+                                #@week.WeekNumber
+                            </h5>
+                        </RadzenCard>
+                        <RadzenCard class="radz">
+                            <h4 style="text-align: center">
+                                Participantes:
+                            </h4>
+                            <h5 style="text-align: center">
+                                @spools.Participants
+                            </h5>
+                        </RadzenCard>
+                        <RadzenCard class="radz">
+                            <h4 style="text-align: center">
+                                Acumulado:
+                            </h4>
+                            <h5 style="text-align: center">
+                            $@spools.Amount
+                            </h5>
 
-                    </RadzenCard>
+                        </RadzenCard>
+                    </div>
+                    <hr />
+                    <div style ="display: flex; justify-content: space-between;">
+                    <h4>Competidores</h4>
+                    <a href="/tabla">ver tabla</a>
+                    </div>
+                    <hr />
+                    @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
+                    {
+                        <RadzenCard style="background-color: #F0EFEF;  margin-bottom: 10px;">
+                            <h3>@item.IdUserNavigation.Fullname </h3>
+                          <h4>Aciertos: @item.Hits</h4>
+                            <div class="flex-column">
+                                @foreach (var team in item.ForecastDetails)
+                                {
+                                    string gray = "winer";
+                                    if (team.IsCorrect == 0 && team.Set == 1)
+                                    {
+                                        gray = "img-gray";
+                                    }
+                                    if (team.IsCorrect == 0 && team.Set == 0)
+                                    {
+                                        gray = "img-sepia";
+                                    }
+                                    <img class="@gray" style="margin-right:5px" src="@team.WinNavigation.ImageUrl" />
+
+                                }
+                            </div>
+                        </RadzenCard>
+                    }
 
                 }
             }
@@ -144,3 +187,30 @@
     }
 
 }
+
+<style>
+
+    .img-gray {
+        filter: grayscale(1);
+        width: 15px;
+    }
+
+    .img-sepia {
+        filter: sepia(1);
+        filter: opacity(.5);
+        width: 15px;
+    }
+
+    .winer {
+        width: 25px;
+    }
+
+    .radz {
+        padding-left: .5rem !important;
+        padding-right: .5rem !important;
+        width: 150px; 
+        margin-bottom:15px;
+        background-color: #152968;
+        color: white;
+    }
+</style>

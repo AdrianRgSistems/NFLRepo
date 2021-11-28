@@ -36,6 +36,7 @@ namespace NFL.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            Environment.SetEnvironmentVariable("NFL_TOKEN","");
             string connection = "";
             if(Environment.GetEnvironmentVariable("CONNECTION_STRING") == null)
             {
@@ -45,6 +46,11 @@ namespace NFL.Server
             {
                 connection = Environment.GetEnvironmentVariable("CONNECTION_STRING");
             }
+
+            services.AddHttpClient("NFL.ServerAPI", client => client.BaseAddress = new Uri(""));
+
+            services.AddHostedService<ScoresService>();
+
             services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
             { builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); }));
             services.AddDbContext<ApplicationDbContext>(options =>

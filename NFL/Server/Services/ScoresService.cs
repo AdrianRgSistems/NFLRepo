@@ -1,36 +1,141 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using NFL.Server.Models;
+using NFL.Shared.NFLModels;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
 namespace NFL.Server.Services
 {
-    public static class ScoresService
+    public class ScoresService : IHostedService, IDisposable
     {
+        private readonly HttpClient httpClient;
+        private readonly IConfiguration configuration;
+        private Timer _timer;
+        private Timer _timerScores;
+        private string token;
+        private string connectionString;
+
+        public ScoresService(HttpClient httpClient, IConfiguration Configuration)
+        {
+            this.httpClient=httpClient;
+            configuration=Configuration;
+        }
 
         public static List<teamScore> _scores = new List<teamScore>();
-        public static async Task UpdateScores(int week)
-        {
-                await Task.Delay(10);
-                IWebDriver driver = new ChromeDriver();
-                driver.Navigate().GoToUrl($"https://www.nfl.com/schedules/2021/REG{week}/");
 
-                var scores = driver.FindElements(By.ClassName(".css-k15rmy"));
-                //var scoresPre = driver.FindElements(By.CssSelector(".sb-score .pregame"));
-                foreach (var item in scores)
+        public void Dispose()
+        {
+            _timer?.Dispose();
+            _timerScores?.Dispose();
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            connectionString = Environment.GetEnvironmentVariable("CONECCTION_STRING");
+            if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DefaultConnection");
+            _timer = new Timer(GetToken, null, TimeSpan.Zero, TimeSpan.FromMinutes(30));
+            _timerScores = new Timer(GetScores, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _timer?.Change(Timeout.Infinite, 0);
+            _timerScores?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
+        private void GetToken(Object state)
+        {
+            try
+            {
+                var tokenTask = httpClient.GetStringAsync("http://localhost:3000");
+                tokenTask.Wait();
+                token = tokenTask.Result;
+
+            }
+            catch (Exception)
+            {
+
+                token = "";
+            }
+            if (!string.IsNullOrEmpty(token))
+            {
+                Environment.SetEnvironmentVariable("NFL_TOKEN", token);
+                GetScores(10);
+            }
+        }
+
+        private void GetScores(Object State)
+        {
+            if (!string.IsNullOrEmpty(token))
+            {
+                try
                 {
-                    var teams = item.FindElements(By.CssSelector(".css1n120i4"));
-                    foreach (var team in teams)
+
+
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
+                    resp.Wait();
+                    var scores = resp.Result;
+                    if (scores != null)
                     {
-                        var away = item.FindElement(By.CssSelector(".css-15fzge"));
-                        var awayNAme = away.Text;
-                        var tota = item.FindElement(By.CssSelector(".css-xqgvjw span"));
-                        var awayTotal = tota.Text;
-                        _scores.Add(new teamScore { name = awayNAme, score = int.Parse(awayTotal) });
+                        using (var context = new apiContext(connectionString))
+                        {
+                            foreach (var game in scores.games)
+                            {
+                                if (game.detail !=null)
+                                {
+                                    var gameSet = context.Games.Where(x => x.Local == game.homeTeam.abbreviation && x.Visitor == game.awayTeam.abbreviation).FirstOrDefaultAsync();
+                                    gameSet.Wait();
+                                    var gameResult = gameSet.Result;
+                                    gameResult.LocalScore = game.detail.homePointsTotal;
+                                    gameResult.VisitorScore = game.detail.visitorPointsTotal;
+                                    gameResult.Status = getStatus(game.detail.phase);
+                                    if (gameResult.Status ==3)
+                                    {
+                                        if (gameResult.LocalScore > gameResult.VisitorScore) gameResult.Win = gameResult.Local;
+                                        if (gameResult.LocalScore < gameResult.VisitorScore) gameResult.Win = gameResult.Visitor;
+                                        if (gameResult.LocalScore == gameResult.VisitorScore) gameResult.Win = null;
+                                    }
+                                    context.Games.Update(gameResult);
+                                    context.SaveChanges();
+                                }
+                            }
+                        }
                     }
                 }
+                catch (Exception)
+                {
+
+                }
+            }
         }
+
+        private int getStatus(string phase)
+        {
+            switch (phase)
+            {
+                case "PREGAME":
+                    return 1;
+                case "FINAL":
+                    return 3;
+                default:
+                    return 2;
+            }
+        }
+
+
     }
 
     public class teamScore
