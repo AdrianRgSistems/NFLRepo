@@ -59,10 +59,7 @@ namespace NFL.Server.Services
         {
             try
             {
-                var tokenTask = httpClient.GetStringAsync("http://localhost:3000");
-                tokenTask.Wait();
-                token = tokenTask.Result;
-
+                token = Environment.GetEnvironmentVariable("NFL_TOKEN");
             }
             catch (Exception)
             {
@@ -71,13 +68,13 @@ namespace NFL.Server.Services
             }
             if (!string.IsNullOrEmpty(token))
             {
-                Environment.SetEnvironmentVariable("NFL_TOKEN", token);
                 GetScores(10);
             }
         }
 
         private void GetScores(Object State)
         {
+            token = Environment.GetEnvironmentVariable("NFL_TOKEN");
             if (!string.IsNullOrEmpty(token))
             {
                 try
@@ -129,6 +126,8 @@ namespace NFL.Server.Services
                 case "PREGAME":
                     return 1;
                 case "FINAL":
+                    return 3;
+                case "FINAL_OVERTIME":
                     return 3;
                 default:
                     return 2;
