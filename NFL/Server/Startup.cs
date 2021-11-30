@@ -113,6 +113,12 @@ namespace NFL.Server
                 app.UseHsts();
             }
 
+            app.Use(async (ctx, next) =>
+            {
+                ctx.Request.Scheme = "https";
+                await next();
+            });
+
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
