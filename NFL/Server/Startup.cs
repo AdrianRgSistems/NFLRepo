@@ -76,6 +76,7 @@ namespace NFL.Server
                                                         }
                         )
                 .AddRoles<IdentityRole>()
+                .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer( )

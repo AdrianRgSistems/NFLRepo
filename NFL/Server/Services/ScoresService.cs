@@ -79,8 +79,6 @@ namespace NFL.Server.Services
             {
                 try
                 {
-
-
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                     var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
                     resp.Wait();
@@ -111,10 +109,14 @@ namespace NFL.Server.Services
                             }
                         }
                     }
+                    else
+                    {
+                        Environment.SetEnvironmentVariable("NFL_TOKEN", "");
+                    }
                 }
                 catch (Exception)
                 {
-
+                    Environment.SetEnvironmentVariable("NFL_TOKEN", "");
                 }
             }
         }
