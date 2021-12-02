@@ -46,7 +46,7 @@ namespace NFL.Server.Areas.Identity.Pages.Account
         {
 
             [Required]
-            [MinLength(5)]
+            [MinLength(3)]
             public string UserName { get; set; }
 
             [Required]

@@ -32,13 +32,16 @@
                             </div>
                         </th>
                     }
+                    <th style="font-size: 10px">
+                        <div>Puntos</div>
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var fore in forecasts)
+                @foreach (var fore in forecasts.OrderBy(X=> X.IdUserNavigation.Fullname))
                 {
                     <tr>
-                        <td class="styky" style="font-size: 10px">@fore.IdUserNavigation.UserName</td>
+                        <td style="font-size: 10px">@fore.IdUserNavigation.UserName</td>
                         @foreach (var game in week.Games.OrderBy(x => x.Date))
                         {
                             string color = "";
@@ -46,6 +49,7 @@
                             if (detai.IsCorrect == 1) color = "#35BF5F";
                             <td style="background: @color; font-size: 10px">@detai.Win</td>
                         }
+                        <td style="font-size: 10px">@fore.Tiebreaker</td>
                     </tr>
                 }
             </tbody>

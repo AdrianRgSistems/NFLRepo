@@ -39,6 +39,7 @@ namespace NFL.Server.Controllers
             {
                 var data = _mapper.Map<Game>(game);
                 _context.Entry(data).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+
                 //_context.Games.Update(data);
                 await _context.SaveChangesAsync();
                 await checkWeek(week);

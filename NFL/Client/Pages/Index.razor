@@ -18,6 +18,7 @@
                 <h5>
                     Registro Abierto Semana #@week.WeekNumber
                 </h5>
+                <a href="/tabla" style="font-size:14px">ver tabla</a>
                 <hr />
                 @if (spools != null)
                 {
@@ -81,37 +82,42 @@
                                 Acumulado:
                             </h4>
                             <h5 style="text-align: center">
-                            $@spools.Amount
+                                $@spools.Amount
                             </h5>
 
                         </RadzenCard>
                     </div>
                     <hr />
-                    <div style ="display: flex; justify-content: space-between;">
-                    <h4>Competidores</h4>
-                    <a href="/tabla">ver tabla</a>
-                    <a href="/games">ver marcadores</a>
+                    <div style="display: flex; justify-content: space-between;">
+                        <h4>Competidores</h4>
+                        <a href="/tabla">ver tabla</a>
+                        <a href="/games">ver marcadores</a>
                     </div>
                     <hr />
                     @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
                     {
                         <RadzenCard style="background-color: #F0EFEF;  margin-bottom: 10px;">
-                            <h3>@item.IdUserNavigation.Fullname </h3>
-                          <h4>Aciertos: @item.Hits</h4>
-                            <div class="flex-column">
+                            <h3 style ="font-weight: bold">@item.IdUserNavigation.Fullname </h3>
+                            <h4>Aciertos: @item.Hits</h4>
+                            <div class="contentflex">
                                 @foreach (var team in item.ForecastDetails)
                                 {
                                     string gray = "winer";
+                                    string err = "absNo";
                                     if (team.IsCorrect == 0 && team.Set == 1)
                                     {
+                                        err = "absSi";
                                         gray = "img-gray";
                                     }
                                     if (team.IsCorrect == 0 && team.Set == 0)
                                     {
+                                        err = "absNo";
                                         gray = "img-sepia";
                                     }
-                                    <img class="@gray" style="margin-right:5px" src="@team.WinNavigation.ImageUrl" />
-
+                                    <div class="imgContent">
+                                        <img class="@gray" style="margin-right:5px;" src="@team.WinNavigation.ImageUrl" />
+                                        <img class="@err" style="width: 20px; height:20px;" src="/img/x.png">
+                                    </div>
                                 }
                             </div>
                         </RadzenCard>
@@ -123,17 +129,45 @@
             {
                 if (spools != null)
                 {
-                    <h5>Semana Finalizada</h5>
+                    <div class="title">
+                        <h5>Semana #@week.WeekNumber Finalizada</h5>
+                    </div>
                     <hr />
                     <h6>Resultados</h6>
                     <h6>Participantes registrados @spools.Participants</h6>
                     <h6>Monto acumulado: $@spools.Amount</h6>
-                    <h6>Ganadores</h6>
                     <hr />
+                    <h6>Ganadores</h6>
                     @foreach (var item in spools.SpoolWinners)
                     {
-                        <RadzenCard style="background-color: #787A7B;">
-                            <h7 style="color: white">@item.IdUserNavigation.Fullname.ToUpper() - Aciertos: @item.IdForecastNavigation.Hits - Premio: $@item.Amount</h7>
+                        var firecast = forecasts.FirstOrDefault(x => x.Idforecast == item.IdForecast);
+                        <RadzenCard style="background-color: #F0EFEF;  margin-bottom: 10px;">
+                            <h3>@item.IdUserNavigation.Fullname </h3>
+                            <div class="flex-column">
+                                <span class="result">Aciertos: @firecast.Hits</span>
+                                <span class="result">Premio: $@item.Amount</span>
+                            </div>
+                            <div class="contentflex">
+                                @foreach (var team in firecast.ForecastDetails)
+                                {
+                                    string gray = "winer";
+                                    string err = "absNo";
+                                    if (team.IsCorrect == 0 && team.Set == 1)
+                                    {
+                                        err = "absSi";
+                                        gray = "img-gray";
+                                    }
+                                    if (team.IsCorrect == 0 && team.Set == 0)
+                                    {
+                                        err = "absNo";
+                                        gray = "img-sepia";
+                                    }
+                                    <div class="imgContent">
+                                        <img class="@gray" style="margin-right:5px;" src="@team.WinNavigation.ImageUrl" />
+                                        <img class="@err" style="width: 20px; height:20px;" src="/img/x.png">
+                                    </div>
+                                }
+                            </div>
                         </RadzenCard>
                     }
 
@@ -191,27 +225,68 @@
 }
 
 <style>
+    .contentflex {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .absNo {
+        visibility: hidden;
+    }
+
+    .absSi {
+        position: absolute;
+        top: 0;
+        left: 0;
+       
+    }
+
+    .imgContent {
+        width: 25px;
+        height: 25px;
+        position: relative;
+    }
+
+    .result {
+        width: 50%;
+        font-weight: bold;
+    }
+
+    .title {
+        display: grid;
+        justify-content: center;
+    }
 
     .img-gray {
         filter: grayscale(1);
-        width: 15px;
+        width: 25px;
+        position: absolute;
+        left: 0;
+        top: 0;
     }
 
     .img-sepia {
         filter: sepia(1);
         filter: opacity(.5);
-        width: 15px;
+        width: 25px;
+        position: absolute;
+        left: 0;
+        top: 0;
     }
 
     .winer {
         width: 25px;
+        position: absolute;
+        left: 0;
+        top: 0;
     }
 
     .radz {
         padding-left: .5rem !important;
         padding-right: .5rem !important;
-        width: 150px; 
-        margin-bottom:15px;
+        width: 150px;
+        margin-bottom: 15px;
         background-color: #152968;
         color: white;
     }

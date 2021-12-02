@@ -23,10 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\img\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="wwwroot\img\7c55e6a6-0967-4220-9856-655bc35f87af.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

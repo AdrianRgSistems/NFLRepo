@@ -52,7 +52,7 @@ namespace NFL.Server.Controllers
                                      Include(x => x.ForecastDetails).
                                      ThenInclude(x => x.GameNavigation).
                                      ThenInclude(x => x.LocalNavigation)
-                                     .Include(c=>c.IdUserNavigation)
+                                     .Include(c => c.IdUserNavigation)
                                      .ToListAsync();
             var res = _mapper.Map<IEnumerable<ForecastDTO>>(respo);
             var response = await Result<IEnumerable<ForecastDTO>>.SuccessAsync(res);
@@ -65,21 +65,25 @@ namespace NFL.Server.Controllers
         public async Task<ActionResult<ForecastDTO>> GetLast()
         {
             var ActualWeek = await _context.Weeks.FirstOrDefaultAsync(x => x.Status == 1 || x.Status == 2);
-            var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
-            var respo = await _context.Forecasts.Where(x => x.IdUser == user && x.IdWeek == ActualWeek.Id).
-                                     Include(x => x.ForecastDetails).
-                                     ThenInclude(x => x.GameNavigation).
-                                     ThenInclude(x => x.VisitorNavigation).
-                                     Include(x => x.ForecastDetails).
-                                     ThenInclude(x => x.GameNavigation).
-                                     ThenInclude(x => x.LocalNavigation).
-                                     FirstOrDefaultAsync();
-            var response = _mapper.Map<ForecastDTO>(respo);
-            var retorno = await Result<ForecastDTO>.SuccessAsync(response);
-            if (response != null) return Ok(retorno); else return NotFound();
+            if (ActualWeek!= null)
+            {
+                var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
+                var respo = await _context.Forecasts.Where(x => x.IdUser == user && x.IdWeek == ActualWeek.Id).
+                                         Include(x => x.ForecastDetails).
+                                         ThenInclude(x => x.GameNavigation).
+                                         ThenInclude(x => x.VisitorNavigation).
+                                         Include(x => x.ForecastDetails).
+                                         ThenInclude(x => x.GameNavigation).
+                                         ThenInclude(x => x.LocalNavigation).
+                                         FirstOrDefaultAsync();
+                var response = _mapper.Map<ForecastDTO>(respo);
+                var retorno = await Result<ForecastDTO>.SuccessAsync(response);
+                if (response != null) return Ok(retorno); else return NotFound();
+            }
+            return NotFound();
         }
 
-        [HttpPost] 
+        [HttpPost]
         public async Task<Shared.Wrapper.IResult> Post(ForecastDTO forecast)
         {
             var user = User.FindFirst(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
@@ -89,9 +93,9 @@ namespace NFL.Server.Controllers
                 var data = _mapper.Map<Forecast>(forecast);
                 await _context.Forecasts.AddAsync(data);
                 await _context.SaveChangesAsync();
-                var spools =_context.Spools.Where(x=>x.WeekId == forecast.IdWeek).ToList();
+                var spools = _context.Spools.Where(x => x.WeekId == forecast.IdWeek).ToList();
                 var spool = spools.LastOrDefault();
-                spool.Participants = _context.Forecasts.Where(x=> x.IdWeek == forecast.IdWeek).Count();
+                spool.Participants = _context.Forecasts.Where(x => x.IdWeek == forecast.IdWeek).Count();
                 spool.Amount =spool.Participants * 50;
                 _context.Spools.Update(spool);
                 await _context.SaveChangesAsync();
