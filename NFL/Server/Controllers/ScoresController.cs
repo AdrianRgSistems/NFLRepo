@@ -32,7 +32,7 @@ namespace NFL.Server.Controllers
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
+                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=13");
                 if (resp != null)
                 {
                     Environment.SetEnvironmentVariable("NFL_TOKEN", token.Token);

@@ -80,7 +80,7 @@ namespace NFL.Server.Services
                 try
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
+                    var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=13");
                     resp.Wait();
                     var scores = resp.Result;
                     if (scores != null)
