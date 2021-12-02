@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NFL.Server.Models;
 using NFL.Shared.ModelsDTO;
 using NFL.Shared.Wrapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,5 +68,6 @@ namespace NFL.Server.Controllers
         public void Delete(int id)
         {
         }
+
     }
 }

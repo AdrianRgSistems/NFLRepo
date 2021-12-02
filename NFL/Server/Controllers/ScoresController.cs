@@ -5,6 +5,7 @@ using NFL.Server.Models;
 using NFL.Shared.ModelsNfl;
 using NFL.Shared.NFLModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -32,7 +33,7 @@ namespace NFL.Server.Controllers
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=13");
+                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
                 if (resp != null)
                 {
                     Environment.SetEnvironmentVariable("NFL_TOKEN", token.Token);
@@ -64,7 +65,9 @@ namespace NFL.Server.Controllers
                     }
                     context.Games.Update(gameSet);
                     context.SaveChanges();
-                }
+                    var week = gameSet.WeekId.Value;
+                     await checkWeek(week);
+                    }
             }
             return true;
             }
@@ -73,6 +76,72 @@ namespace NFL.Server.Controllers
                 return false;
             }
         }
+
+        private async Task checkWeek(int weekId)
+        {
+            var games = await context.Games.Where(x => x.WeekId == weekId).ToListAsync();
+            var week = await context.Weeks.FirstOrDefaultAsync(x => x.Id==weekId);
+            var rest = games.Count(x => x.Status != 3);
+            if (rest == 0)
+            {
+                var lastGame = games.LastOrDefault();
+                week.Status = 3;
+                week.LastScore = lastGame.VisitorScore + lastGame.LocalScore;
+                context.Weeks.Update(week);
+                await context.SaveChangesAsync();
+                await setWinner(week);
+            }
+        }
+
+        private async Task setWinner(Week week)
+        {
+            var winner = new List<Forecast>();
+            var forecasts = await context.Forecasts.Where(x => x.IdWeek == week.Id).Include(x => x.IdUserNavigation).OrderByDescending(x => x.Hits).ToListAsync();
+            var top = forecasts.Max(x => x.Hits).Value;
+            var winners = forecasts.Where(x => x.Hits == top).ToList();
+            if (winners.Count > 1)
+            {
+                var dif = 10000;
+                foreach (var item in winners)
+                {
+                    var d = item.Tiebreaker.Value - week.LastScore.Value;
+                    var difreal = Math.Abs(d);
+                    if (difreal <= dif)
+                    {
+                        if (difreal == dif)
+                        {
+                            winner.Add(item);
+                        }
+                        else
+                        {
+                            winner.Clear();
+                            winner.Add(item);
+                        }
+                        dif = difreal;
+                    }
+                }
+            }
+            else
+            {
+                winner = winners;
+            }
+            await SaveWinners(winner, week.Id);
+        }
+
+        private async Task SaveWinners(List<Forecast> winners, int weekid)
+        {
+            var spool = await context.Spools.FirstOrDefaultAsync(x => x.WeekId == weekid);
+            spool.Winners = winners.Count();
+            var ganado = spool.Amount / winners.Count();
+            foreach (var item in winners)
+            {
+                var winner = new SpoolWinner { Amount = ganado, IdForecast = item.Idforecast, IdUser = item.IdUser };
+                spool.SpoolWinners.Add(winner);
+            }
+            context.Spools.Update(spool);
+            await context.SaveChangesAsync();
+        }
+
         private int getStatus(string phase)
         {
             switch (phase)

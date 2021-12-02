@@ -43,6 +43,8 @@ namespace NFL.Server.Services
         {
             connectionString = Environment.GetEnvironmentVariable("CONECCTION_STRING");
             if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DefaultConnection");
+            var re = GetLast();
+            re.Wait();
             _timer = new Timer(GetToken, null, TimeSpan.Zero, TimeSpan.FromMinutes(30));
             _timerScores = new Timer(GetScores, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
@@ -75,12 +77,13 @@ namespace NFL.Server.Services
         private void GetScores(Object State)
         {
             token = Environment.GetEnvironmentVariable("NFL_TOKEN");
+            var last = Environment.GetEnvironmentVariable("NFL_WEEK");
             if (!string.IsNullOrEmpty(token))
             {
                 try
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=13");
+                    var resp = httpClient.GetFromJsonAsync<Root>($"https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week={last}");
                     resp.Wait();
                     var scores = resp.Result;
                     if (scores != null)
@@ -118,6 +121,22 @@ namespace NFL.Server.Services
                 {
                     Environment.SetEnvironmentVariable("NFL_TOKEN", "");
                 }
+            }
+        }
+
+
+        private async Task GetLast()
+        {
+            using (var context = new apiContext(connectionString))
+            {
+                var current = await context.Weeks.Where(x => x.Status != 0).
+                               Include(x => x.Games).
+                               ThenInclude(x => x.LocalNavigation).
+                               Include(z => z.Games).
+                               ThenInclude(z => z.VisitorNavigation).ToListAsync();
+                var week = current.LastOrDefault();
+                Environment.SetEnvironmentVariable("NFL_WEEK", week.WeekNumber.ToString());
+
             }
         }
 

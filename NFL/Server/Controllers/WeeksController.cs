@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using NFL.Server.Models;
 using NFL.Shared.ModelsDTO;
 using NFL.Shared.Wrapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,6 +77,7 @@ namespace NFL.Server.Controllers
             //                                ThenInclude(z => z.VisitorNavigation).
             //                                LastOrDefaultAsync();
             var result = _mapper.Map<WeekDTO>(week);
+            Environment.SetEnvironmentVariable("NFL_WEEK", week.WeekNumber.ToString());
             return result;
         }
 
