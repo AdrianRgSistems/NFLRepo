@@ -90,6 +90,7 @@
                     <div style ="display: flex; justify-content: space-between;">
                     <h4>Competidores</h4>
                     <a href="/tabla">ver tabla</a>
+                    <a href="/games">ver marcadores</a>
                     </div>
                     <hr />
                     @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
@@ -127,6 +128,7 @@
                     <h6>Resultados</h6>
                     <h6>Participantes registrados @spools.Participants</h6>
                     <h6>Monto acumulado: $@spools.Amount</h6>
+                    <h6>Ganadores</h6>
                     <hr />
                     @foreach (var item in spools.SpoolWinners)
                     {
