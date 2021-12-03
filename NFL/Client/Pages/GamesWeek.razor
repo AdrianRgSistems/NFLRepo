@@ -1,5 +1,7 @@
 ﻿@page "/games"
 @using NFL.Shared.ModelsDTO
+@using NFL.Client.Helpers
+@inject StateContainer StateMan
 @inject HttpClient Http
 @inject IWeekService weekService
 @using Microsoft.AspNetCore.Authorization
@@ -56,6 +58,22 @@ else
     int set = 0;
     protected async override Task OnInitializedAsync()
     {
+        StateMan.UpdateStateAsync += update;
+        await Refresh();
+    }
+    public async ValueTask DisposeAsync()
+    {
+        StateMan.UpdateStateAsync -= StateHasChanged;
+    }
+     private void update()
+    {
+        Task.Run(async () => { await Refresh(); });
+        StateHasChanged();
+    }
+
+
+    private async Task Refresh()
+    {
         await GetWeecks();
         actualWeek = Weeks.FirstOrDefault(x => x.Status == 1 || x.Status == 2);
         if (actualWeek == null) actualWeek = Weeks.LastOrDefault(x => x.Status == 3);
@@ -78,13 +96,14 @@ else
         {
             Games = res.Games.OrderBy(x => x.Date).ToList();
             actualWeek = res;
+            StateHasChanged();
         }
     }
 
     private async Task changes(ChangeEventArgs e)
     {
         var id = int.Parse(e.Value.ToString());
-        if(id != 0)await GetGames(id);
+        if (id != 0) await GetGames(id);
     }
 
 }

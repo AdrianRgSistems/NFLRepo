@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
+using NFL.Server.Services;
 
 namespace NFL.Server.Controllers
 {
@@ -18,11 +20,13 @@ namespace NFL.Server.Controllers
     {
         private readonly apiContext _context;
         private readonly IMapper _mapper;
+        private readonly IHubContext<HubService> hubcontex;
 
-        public forecastController(apiContext context, IMapper mapper)
+        public forecastController(apiContext context, IMapper mapper, IHubContext<HubService> hubcontex)
         {
             _context = context;
             _mapper = mapper;
+            this.hubcontex=hubcontex;
         }
 
         [HttpGet]
@@ -99,6 +103,7 @@ namespace NFL.Server.Controllers
                 spool.Amount =spool.Participants * 50;
                 _context.Spools.Update(spool);
                 await _context.SaveChangesAsync();
+                await hubcontex.Clients.All.SendAsync("UpdateData");
                 return await Result.SuccessAsync();
             }
             catch (System.Exception)
@@ -122,6 +127,7 @@ namespace NFL.Server.Controllers
                 }
                 _context.Forecasts.Update(data);
                 await _context.SaveChangesAsync();
+                await hubcontex.Clients.All.SendAsync("UpdateData");
                 return await Result.SuccessAsync();
             }
             catch (System.Exception)

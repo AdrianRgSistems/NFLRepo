@@ -1,9 +1,11 @@
 ﻿@page "/"
+@using Radzen
+@using NFL.Client.Helpers
+@inject StateContainer StateMan
 @inject HttpClient _HttpClient
 @inject AuthenticationStateProvider auth
 @inject IWeekService weekService
 @inject IForecastService forecastService
-@using Radzen
 
 <AuthorizeView>
     <NotAuthorized>
@@ -90,8 +92,6 @@
                     <hr />
                     <div style="display: flex; justify-content: space-between;">
                         <h4>Competidores</h4>
-                        <a href="/tabla">ver tabla</a>
-                        <a href="/games">ver marcadores</a>
                     </div>
                     <hr />
                     @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
@@ -192,10 +192,26 @@
 
     protected override async Task OnInitializedAsync()
     {
+        StateMan.UpdateStateAsync += update;
+        await Refresh();
+    }
 
+    public async ValueTask DisposeAsync()
+    {
+        StateMan.UpdateStateAsync -= StateHasChanged;
+    }
+
+    private void update()
+    {
+        Task.Run(async () => { await Refresh(); });
+        StateHasChanged();
+    }
+
+    private async Task Refresh()
+    {
         var authstate = await auth.GetAuthenticationStateAsync();
         var user = authstate.User;
-        if (user.Identity.IsAuthenticated) await GetWeek();
+        if (user.Identity.IsAuthenticated) await GetWeek(); 
     }
 
     private async Task GetWeek()
@@ -207,6 +223,7 @@
             weekinprogress = week.Status.Value;
             await GetSpools();
             await GetForecast();
+            StateHasChanged();
         }
     }
 
@@ -267,7 +284,7 @@
     }
 
     .img-sepia {
-        filter: sepia(1);
+        filter: sepia(1) opacity(.3);
         width: 25px;
         position: absolute;
         left: 0;

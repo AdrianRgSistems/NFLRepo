@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NFL.Server.Models;
+using NFL.Server.Services;
 using NFL.Shared.ModelsDTO;
 using NFL.Shared.Wrapper;
 using System;
@@ -19,11 +21,12 @@ namespace NFL.Server.Controllers
     {
         private readonly apiContext _context;
         private readonly IMapper _mapper;
-
-        public SpoolController(apiContext context, IMapper mapper)
+        private readonly IHubContext<HubService> hubcontex;
+        public SpoolController(apiContext context, IMapper mapper, IHubContext<HubService> hubcontex)
         {
             _context = context;
             _mapper = mapper;
+            this.hubcontex=hubcontex;
         }
 
         // GET: api/<SpoolController>
@@ -54,6 +57,7 @@ namespace NFL.Server.Controllers
             var newspool = _mapper.Map<Spool>(spool);
             await _context.Spools.AddAsync(newspool);
             await _context.SaveChangesAsync();
+            await hubcontex.Clients.All.SendAsync("UpdateData");
             return await Result.SuccessAsync();
         }
 

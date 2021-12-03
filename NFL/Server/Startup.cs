@@ -86,12 +86,18 @@ namespace NFL.Server
 
             services.AddAuthentication().AddIdentityServerJwt();
 
+            services.AddResponseCompression(o =>
+            {
+                o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
+            });
+
 
             var mapperConfig = new MapperConfiguration(n =>
             {
                 n.AddProfile(new MapperConfig());
             });
             IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSignalR();
             services.AddSingleton(mapper);
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -139,6 +145,7 @@ namespace NFL.Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapHub<HubService>("/api/hubregister");
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
             });

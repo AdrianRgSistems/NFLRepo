@@ -1,4 +1,6 @@
 ﻿@page "/tabla"
+@using NFL.Client.Helpers
+@inject StateContainer StateMan
 @inject HttpClient _HttpClient
 @inject AuthenticationStateProvider auth
 @inject IWeekService weekService
@@ -10,7 +12,7 @@
 {
     <div class="table-responsive">
 
-        <table class="table table-sm table-bordered">
+        <table class="table table-sm table-bordered table-striped table-hover">
             <thead>
                 <tr>
                     <th style="font-size: 10px">
@@ -38,7 +40,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var fore in forecasts.OrderBy(X=> X.IdUserNavigation.Fullname))
+                @foreach (var fore in forecasts.OrderBy(X => X.IdUserNavigation.Fullname))
                 {
                     <tr>
                         <td style="font-size: 10px">@fore.IdUserNavigation.UserName.ToUpper()</td>
@@ -66,10 +68,27 @@
 
     protected override async Task OnInitializedAsync()
     {
+        StateMan.UpdateStateAsync += update;
+        await Refresh();
+    }
+   
+    public async ValueTask DisposeAsync()
+    {
+        StateMan.UpdateStateAsync -= StateHasChanged;
+    }
 
+    private void update()
+    {
+        Task.Run(async () => { await Refresh(); });
+        StateHasChanged();
+    }
+
+    private async Task Refresh()
+    {
         var authstate = await auth.GetAuthenticationStateAsync();
         var user = authstate.User;
         if (user.Identity.IsAuthenticated) await GetWeek();
+
     }
 
     private async Task GetWeek()
@@ -86,6 +105,7 @@
     {
         var fores = await forecastService.GetAllForecastAsync(week.Id);
         forecasts = fores.Data.ToList();
+        StateHasChanged();
     }
 
 
@@ -95,5 +115,10 @@
     .styky {
         position: sticky;
         z-index: 1;
+    }
+
+    .table-hover tbody tr:hover {
+        color: #ffffff;
+        background-color: rgba(50,50,50,1);
     }
 </style>

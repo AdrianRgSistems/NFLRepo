@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NFL.Server.Models;
+using NFL.Server.Services;
 using NFL.Shared.ModelsNfl;
 using NFL.Shared.NFLModels;
 using System;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
 namespace NFL.Server.Controllers
@@ -20,10 +22,11 @@ namespace NFL.Server.Controllers
     public class ScoresController : ControllerBase
     {
         private readonly apiContext context;
-
-        public ScoresController(apiContext contex)
+        private readonly IHubContext<HubService> hubcontex;
+        public ScoresController(apiContext contex, IHubContext<HubService> hubcontex)
         {
             this.context=contex;
+            this.hubcontex=hubcontex;
         }
 
         [HttpPost]
@@ -49,6 +52,7 @@ namespace NFL.Server.Controllers
         public async Task<ActionResult> GetScoresAsync([FromBody] Root token)
         {
           var responce = await GetScores(token);
+            await hubcontex.Clients.All.SendAsync("UpdateData");
           return Ok();
         }
 
@@ -114,20 +118,20 @@ namespace NFL.Server.Controllers
                 var dif = 10000;
                 foreach (var item in winners)
                 {
-                    var d = item.Tiebreaker.Value - week.LastScore.Value;
-                    var difreal = Math.Abs(d);
-                    if (difreal <= dif)
+                    var difreal = week.LastScore.Value -item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
+                    //var difreal = Math.Abs(d);
+                    if (difreal <= dif && difreal >= 0)// si el resultados es menor que la ultima diferencia registrada y mayor a cero entra en el metodo
                     {
-                        if (difreal == dif)
+                        if (difreal == dif)// si los puntos son iguales se añade a la lista de ganadores
                         {
                             winner.Add(item);
                         }
-                        else
+                        else // si son diferetes se borra la lista y se añade el nuevo ganador
                         {
                             winner.Clear();
                             winner.Add(item);
                         }
-                        dif = difreal;
+                        dif = difreal;// se establece los puntos a vencer
                     }
                 }
             }

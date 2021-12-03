@@ -1,29 +1,78 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.SignalR.Client
 @using System.Security.Claims
-
+@using NFL.Client.Helpers
+@using Radzen
+@inject StateContainer State
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 
 <AuthorizeView>
     <Authorized>
-        <button class="nav-link btn btn-link inicia" @onclick="BeginSignOut">Cerrar Sesion</button>
+        <div class="contButton">
+            <RadzenButton Click=@(args => OnClick("/")) Style="width: 90px; padding: 3px" Text="Home" Icon="home" ButtonStyle="ButtonStyle.Light" />
+            <RadzenButton Click=@(args => OnClick("/games")) Style="width: 90px; padding: 3px" Text="Scores" Icon="calendar_today" ButtonStyle="ButtonStyle.Light" />
+            <RadzenButton Click=@(args => OnClick("/tabla")) Style="width: 90px; padding: 3px" Text="Tabla" Icon="list" ButtonStyle="ButtonStyle.Light" />
+            @* <button class="nav-link btn btn-link inicia" @onclick="BeginSignOut">Cerrar Sesion</button>*@
+        </div>
     </Authorized>
     <NotAuthorized>
         <a class="inicia" href="authentication/login">Iniciar Sesion</a>
     </NotAuthorized>
 </AuthorizeView>
 
-@code{
-    private async Task BeginSignOut(MouseEventArgs args)
+@code {
+    private HubConnection HubConnection;
+
+    protected override async Task OnInitializedAsync()
     {
-        await SignOutManager.SetSignOutState();
-        Navigation.NavigateTo("authentication/logout");
+        await StartHub();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await HubConnection.DisposeAsync();
+    }
+
+    private void OnClick(string buttonName)
+    {
+        Navigation.NavigateTo(buttonName);
+    }
+
+    private void Refresh()
+    {
+        State.UpdateState();
+        StateHasChanged();
+    }
+
+    private async Task StartHub()
+    {        HubConnection = new HubConnectionBuilder().WithUrl("https://localhost:5100/api/hubregister").Build();
+        HubConnection.On("UpdateData", () =>
+        {
+            Refresh();
+        });
+        try
+        {
+            await HubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
     }
 }
 
 <style>
-    .inicia{
+    .contButton {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .inicia {
         border: 1px solid black;
         border-radius: 5%;
         padding: 5px;
