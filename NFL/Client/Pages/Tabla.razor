@@ -41,7 +41,7 @@
                 @foreach (var fore in forecasts.OrderBy(X=> X.IdUserNavigation.Fullname))
                 {
                     <tr>
-                        <td style="font-size: 10px">@fore.IdUserNavigation.UserName</td>
+                        <td style="font-size: 10px">@fore.IdUserNavigation.UserName.ToUpper()</td>
                         @foreach (var game in week.Games.OrderBy(x => x.Date))
                         {
                             string color = "";
