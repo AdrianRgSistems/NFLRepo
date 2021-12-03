@@ -50,7 +50,7 @@ namespace NFL.Server
 
             services.AddHttpClient("NFL.ServerAPI", client => client.BaseAddress = new Uri(""));
 
-            services.AddHostedService<ScoresService>();
+            //services.AddHostedService<ScoresService>();
 
             services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
             { builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); }));

@@ -45,6 +45,15 @@ namespace NFL.Server.Controllers
             return BadRequest();
         }
 
+        [HttpPost("update")]
+        public async Task<ActionResult> GetScoresAsync([FromBody] Root token)
+        {
+          var responce = await GetScores(token);
+          return Ok();
+        }
+
+
+
         private async Task<bool> GetScores(Root scores)
         {
             try

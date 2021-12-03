@@ -21,7 +21,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "CONNECTION_STRING": "Host=mysql_hosting; Port=3306; UserID=root; Pwd=javac; Database=nfl_pools;",
+        "CONNECTION_STRING": "",
         "NFL_WEEK": "13"
       },
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
