@@ -145,7 +145,7 @@ namespace NFL.Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
-                endpoints.MapHub<HubService>("/api/hubregister");
+                endpoints.MapHub<HubService>("/hubregister");
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
             });

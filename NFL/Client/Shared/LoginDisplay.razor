@@ -47,7 +47,7 @@
     }
 
     private async Task StartHub()
-    {        HubConnection = new HubConnectionBuilder().WithUrl("https://localhost:5100/api/hubregister").Build();
+    {        HubConnection = new HubConnectionBuilder().WithUrl("https://nflpool.tec-solutions.com.mx/hubregister").Build();
         HubConnection.On("UpdateData", () =>
         {
             Refresh();
