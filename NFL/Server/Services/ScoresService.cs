@@ -42,7 +42,7 @@ namespace NFL.Server.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             connectionString = Environment.GetEnvironmentVariable("CONECCTION_STRING");
-            if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DevelopConnection");
+            if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DefaultConnection");
             var re = GetLast();
             re.Wait();
             _timer = new Timer(GetToken, null, TimeSpan.Zero, TimeSpan.FromMinutes(30));
