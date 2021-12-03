@@ -29,11 +29,12 @@ namespace NFL.Server.Controllers
         [HttpPost]
         public async Task<ActionResult> GetScores([FromBody]TokenDTO token)
         {
+            var week = Environment.GetEnvironmentVariable("NFL_WEEK");
             Root root = new Root();
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week=12");
+                var resp = await httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week="+week);
                 if (resp != null)
                 {
                     Environment.SetEnvironmentVariable("NFL_TOKEN", token.Token);

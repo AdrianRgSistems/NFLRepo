@@ -42,7 +42,7 @@ namespace NFL.Server.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             connectionString = Environment.GetEnvironmentVariable("CONECCTION_STRING");
-            if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString)) connectionString = configuration.GetConnectionString("DevelopConnection");
             var re = GetLast();
             re.Wait();
             _timer = new Timer(GetToken, null, TimeSpan.Zero, TimeSpan.FromMinutes(30));
@@ -83,7 +83,7 @@ namespace NFL.Server.Services
                 try
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    var resp = httpClient.GetFromJsonAsync<Root>($"https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week={last}");
+                    var resp = httpClient.GetFromJsonAsync<Root>("https://api.nfl.com/experience/v1/games?season=2021&seasonType=REG&week="+last);
                     resp.Wait();
                     var scores = resp.Result;
                     if (scores != null)
@@ -129,13 +129,13 @@ namespace NFL.Server.Services
         {
             using (var context = new apiContext(connectionString))
             {
-                var current = await context.Weeks.Where(x => x.Status != 0).
+                var current = await context.Weeks.Where(x => x.Status == 2).
                                Include(x => x.Games).
                                ThenInclude(x => x.LocalNavigation).
                                Include(z => z.Games).
                                ThenInclude(z => z.VisitorNavigation).ToListAsync();
                 var week = current.LastOrDefault();
-                Environment.SetEnvironmentVariable("NFL_WEEK", week.WeekNumber.ToString());
+               if(week != null) Environment.SetEnvironmentVariable("NFL_WEEK", week.WeekNumber.ToString());
 
             }
         }
