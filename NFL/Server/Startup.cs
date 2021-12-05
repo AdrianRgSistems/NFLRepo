@@ -41,12 +41,14 @@ namespace NFL.Server
             string connection = "";
             if(Environment.GetEnvironmentVariable("CONNECTION_STRING") == null)
             {
-                connection = Configuration.GetConnectionString("DefaultConnection");
+                connection = Configuration.GetConnectionString("DevelopConnection");
             }
             else
             {
                 connection = Environment.GetEnvironmentVariable("CONNECTION_STRING");
             }
+
+            Console.WriteLine(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
 
             services.AddHttpClient("NFL.ServerAPI", client => client.BaseAddress = new Uri(""));
 
@@ -54,6 +56,7 @@ namespace NFL.Server
 
             services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
             { builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); }));
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(connection
                    /* Configuration.GetConnectionString("DefaultConnection")*/, new MySqlServerVersion(new System.Version(8, 0, 26))));
@@ -106,6 +109,7 @@ namespace NFL.Server
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseResponseCompression();
             
             if (env.IsDevelopment())
             {
@@ -145,7 +149,7 @@ namespace NFL.Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
-                endpoints.MapHub<HubService>("/hubregister");
+                endpoints.MapHub<HubService>("/hub/hubregister");
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
             });
