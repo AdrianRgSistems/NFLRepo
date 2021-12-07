@@ -9,6 +9,8 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using NFL.Server.Services;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -21,11 +23,13 @@ namespace NFL.Server.Controllers
     {
         private readonly apiContext _context;
         private readonly IMapper _mapper;
+        private readonly IHubContext<HubService> hubcontex;
 
-        public GamesController(apiContext context, IMapper mapper)
+        public GamesController(apiContext context, IMapper mapper, IHubContext<HubService> hubcontex)
         {
             _context = context;
             _mapper = mapper;
+            this.hubcontex=hubcontex;
         }
 
         [Authorize(Roles = "Admin")]
@@ -43,6 +47,7 @@ namespace NFL.Server.Controllers
                 //_context.Games.Update(data);
                 await _context.SaveChangesAsync();
                 await checkWeek(week);
+                await hubcontex.Clients.All.SendAsync("UpdateData");
                 return await Result.SuccessAsync();
             }
             catch (System.Exception)
@@ -78,22 +83,47 @@ namespace NFL.Server.Controllers
                 var dif = 10000;
                 foreach (var item in winners)
                 {
-                    var d = item.Tiebreaker.Value - week.LastScore.Value;
-                    var difreal = Math.Abs(d);
-                    if (difreal <= dif)
+                    var difreal = week.LastScore.Value - item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
+                    //var difreal = Math.Abs(d);
+                    if (difreal <= dif && difreal >= 0)// si el resultados es menor que la ultima diferencia registrada y mayor a cero entra en el metodo
                     {
-                        if (difreal == dif)
+                        if (difreal == dif)// si los puntos son iguales se añade a la lista de ganadores
                         {
                             winner.Add(item);
                         }
-                        else
+                        else // si son diferetes se borra la lista y se añade el nuevo ganador
                         {
                             winner.Clear();
                             winner.Add(item);
                         }
-                        dif = difreal;
+                        dif = difreal;// se establece los puntos a vencer
                     }
                 }
+
+                if(winner.Count == 0)
+                {
+                    var dife = -1000;
+                    foreach (var item in winners)
+                    {
+                        var difreal = week.LastScore.Value - item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
+                                                                                   //var difreal = Math.Abs(d);
+                        if (difreal >= dife)// si el resultados es menor que la ultima diferencia registrada y mayor a cero entra en el metodo
+                        {
+                            if (difreal == dife)// si los puntos son iguales se añade a la lista de ganadores
+                            {
+                                winner.Add(item);
+                            }
+                            else // si son diferetes se borra la lista y se añade el nuevo ganador
+                            {
+                                winner.Clear();
+                                winner.Add(item);
+                            }
+                            dife = difreal;// se establece los puntos a vencer
+                        }
+                    }
+
+                }
+
             }
             else
             {
