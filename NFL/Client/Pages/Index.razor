@@ -97,7 +97,10 @@
                     @foreach (var item in forecasts.OrderByDescending(x => x.Hits))
                     {
                         <RadzenCard style="background-color: #F0EFEF;  margin-bottom: 10px;">
-                            <h3 style ="font-weight: bold">@item.IdUserNavigation.Fullname </h3>
+                            <div class="contentData">
+                                <h3 style="font-weight: bold">@item.IdUserNavigation.Fullname </h3>
+                                <h3 style="font-weight: bold">Puntos:@item.Tiebreaker</h3>
+                            </div>
                             <h4>Aciertos: @item.Hits</h4>
                             <div class="contentflex">
                                 @foreach (var team in item.ForecastDetails)
@@ -211,7 +214,7 @@
     {
         var authstate = await auth.GetAuthenticationStateAsync();
         var user = authstate.User;
-        if (user.Identity.IsAuthenticated) await GetWeek(); 
+        if (user.Identity.IsAuthenticated) await GetWeek();
     }
 
     private async Task GetWeek()
@@ -248,6 +251,14 @@
         flex-wrap: wrap;
     }
 
+    .contentData {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+
     .absNo {
         visibility: hidden;
     }
@@ -256,7 +267,6 @@
         position: absolute;
         top: 0;
         left: 0;
-       
     }
 
     .imgContent {

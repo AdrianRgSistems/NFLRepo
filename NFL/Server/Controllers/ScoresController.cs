@@ -109,6 +109,7 @@ namespace NFL.Server.Controllers
 
         private async Task setWinner(Week week)
         {
+
             var winner = new List<Forecast>();
             var forecasts = await context.Forecasts.Where(x => x.IdWeek == week.Id).Include(x => x.IdUserNavigation).OrderByDescending(x => x.Hits).ToListAsync();
             var top = forecasts.Max(x => x.Hits).Value;
@@ -118,7 +119,7 @@ namespace NFL.Server.Controllers
                 var dif = 10000;
                 foreach (var item in winners)
                 {
-                    var difreal = week.LastScore.Value -item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
+                    var difreal = week.LastScore.Value - item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
                     //var difreal = Math.Abs(d);
                     if (difreal <= dif && difreal >= 0)// si el resultados es menor que la ultima diferencia registrada y mayor a cero entra en el metodo
                     {
@@ -134,6 +135,31 @@ namespace NFL.Server.Controllers
                         dif = difreal;// se establece los puntos a vencer
                     }
                 }
+
+                if (winner.Count == 0)
+                {
+                    var dife = -1000;
+                    foreach (var item in winners)
+                    {
+                        var difreal = week.LastScore.Value - item.Tiebreaker.Value;//Resta los puntos del jugador a lo puntos totales
+                                                                                   //var difreal = Math.Abs(d);
+                        if (difreal >= dife)// si el resultados es menor que la ultima diferencia registrada y mayor a cero entra en el metodo
+                        {
+                            if (difreal == dife)// si los puntos son iguales se añade a la lista de ganadores
+                            {
+                                winner.Add(item);
+                            }
+                            else // si son diferetes se borra la lista y se añade el nuevo ganador
+                            {
+                                winner.Clear();
+                                winner.Add(item);
+                            }
+                            dife = difreal;// se establece los puntos a vencer
+                        }
+                    }
+
+                }
+
             }
             else
             {

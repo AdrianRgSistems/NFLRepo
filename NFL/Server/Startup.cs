@@ -41,7 +41,7 @@ namespace NFL.Server
             string connection = "";
             if(Environment.GetEnvironmentVariable("CONNECTION_STRING") == null)
             {
-                connection = Configuration.GetConnectionString("DevelopConnection");
+                connection = Configuration.GetConnectionString("TecConnection");
             }
             else
             {
